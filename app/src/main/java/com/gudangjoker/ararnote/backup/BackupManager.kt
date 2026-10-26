@@ -86,30 +86,30 @@ class BackupManager(private val context: Context) {
     suspend fun restoreBackup(inputStream: InputStream, passwordCandidate: String? = null): Int {
         val bytes = inputStream.readBytes()
 
-        val restoredNotes: List<NoteEntity> = if (ColorNoteBackupParser.isColorNoteBackup(bytes)) {
-            // It's a native ColorNote encrypted binary backup file!
+        val restoredNotes: List<NoteEntity> = if (LegacyBackupParser.isLegacyEncryptedBackup(bytes)) {
+            // Legacy encrypted binary backup format
             var notes: List<NoteEntity>? = null
 
             // 1. Try provided password candidate if user entered one
             if (!passwordCandidate.isNullOrBlank()) {
                 try {
-                    notes = ColorNoteBackupParser.parseColorNoteBackup(bytes, passwordCandidate)
+                    notes = LegacyBackupParser.parseLegacyBackup(bytes, passwordCandidate)
                 } catch (e: Exception) {
                     // Try next
                 }
             }
 
-            // 2. Try default ColorNote backup password "0000"
+            // 2. Try default backup password "0000"
             if (notes == null) {
                 try {
-                    notes = ColorNoteBackupParser.parseColorNoteBackup(bytes, "0000")
+                    notes = LegacyBackupParser.parseLegacyBackup(bytes, "0000")
                 } catch (e: Exception) {
                     // Try next
                 }
             }
 
             if (notes == null) {
-                throw IllegalArgumentException("Password required for ColorNote backup file")
+                throw IllegalArgumentException("Password required for encrypted backup file")
             }
             notes
         } else {

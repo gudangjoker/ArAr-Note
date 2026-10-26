@@ -1,13 +1,13 @@
 # ArAr Note 📝
 
-**ArAr Note** adalah aplikasi catatan & checklist Android modern yang merekonstruksi dan menduplikasi seluruh fitur serta arsitektur inti dari **ColorNote 4.9.3** secara utuh dan fungsional, dibangun dengan **Kotlin**, **AndroidX Room**, **Coroutines**, dan **Material Components**.
+**ArAr Note** adalah aplikasi catatan & checklist Android modern yang cepat, elegan, dan lengkap, dibangun dengan **Kotlin**, **AndroidX Room**, **Coroutines**, dan **Material Components**.
 
 ---
 
 ## 🌟 Fitur Utama (Full Feature Set)
 
 1. **Text Notepad Ruled Paper (`LinedEditText`):**
-   - Editor catatan teks dengan tampilan kertas bergaris (*ruled lines*) khas ColorNote.
+   - Editor catatan teks dengan tampilan kertas bergaris (*ruled lines*) khas ArAr Note.
    - Menggambar garis horisontal dinamis berdasarkan tinggi font (*baseline*) hingga ke bagian bawah layar.
 
 2. **Interactive Checklist Manager (`ChecklistItem`):**
@@ -16,7 +16,7 @@
    - Tombol cepat *Move Checked to Bottom* (pindahkan yang sudah selesai ke bawah) dan *Delete Checked*.
    - Input cepat item baru di baris bawah.
 
-3. **9 Tema Warna Klasik ColorNote:**
+3. **9 Tema Warna Klasik ArAr Note:**
    - Kuning (Default Notepad), Biru, Merah, Oranye, Hijau, Ungu, Cyan, Abu-abu, dan Gelap (*Dark/Black*).
    - Pengubah warna instan di toolbar editor dan filter warna (*chips filter*) di halaman utama.
 
@@ -54,7 +54,7 @@
    - **Trash & Empty Trash:** Keranjang sampah dengan opsi pulihkan (*restore*) atau hapus permanen.
 
 9. **Backup & Restore ke Google Drive, Cloud & Penyimpanan Lokal (`.backup`):**
-   - **Kompatibel 100% dengan File Backup ColorNote Resmi (`colornote-*.backup`, `.dat`):** Mampu mendeteksi dan mendekripsi berkas cadangan biner resmi dari aplikasi ColorNote asli (menggunakan cipher `PBEWITHMD5AND128BITAES-CBC-OPENSSL` dengan password default `0000` maupun password kustom). Seluruh catatan dan to-do list dari ColorNote dapat langsung dipulihkan ke ArAr Note tanpa kehilangan data.
+   - **Kompatibel 100% dengan Berkas Cadangan Terenkripsi Legacy (`*.backup`, `*.dat`):** Mampu mendeteksi dan mendekripsi berkas cadangan biner terenkripsi legacy (menggunakan cipher `PBEWITHMD5AND128BITAES-CBC-OPENSSL` dengan password default `0000` maupun password kustom). Seluruh catatan dan to-do list dapat langsung dipulihkan ke ArAr Note tanpa kehilangan data.
    - **Dukungan Google Drive (Storage Access Framework - SAF):** Simpan berkas cadangan database `.backup` langsung ke akun Google Drive pribadi, OneDrive, SD Card, atau folder perangkat tanpa perlu konfigurasi API key yang rumit.
    - **Pemulihan Langsung dari Google Drive:** Jelajahi dan pilih berkas cadangan langsung dari Google Drive untuk memulihkan seluruh catatan secara instan.
    - **Cadangan Internal Aplikasi:** Tetap menyediakan opsi simpan dan pulihkan cadangan cepat di penyimpanan internal aplikasi.
@@ -62,9 +62,9 @@
 
 ---
 
-## 🗄️ Struktur Basis Data (`colornote.db`)
+## 🗄️ Struktur Basis Data (`ararnote.db`)
 
-Menggunakan skema tabel `notes` SQLite 30 kolom yang identik dengan arsitektur ColorNote:
+Menggunakan skema tabel `notes` SQLite 30 kolom:
 
 | Kolom | Tipe | Deskripsi |
 | :--- | :--- | :--- |

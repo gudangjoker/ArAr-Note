@@ -12,7 +12,7 @@
     <color name="ruled_line">#25000000</color>
     <color name="ic_launcher_background">#FCF9F2</color>
 
-    <!-- 9 Classic ColorNote Note Theme Colors -->
+    <!-- 9 Classic Note Theme Colors -->
     <!-- 0: Yellow -->
     <color name="note_yellow_bg">#FFF9C4</color>
     <color name="note_yellow_header">#FBC02D</color>

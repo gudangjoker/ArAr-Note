@@ -345,7 +345,7 @@ class SettingsActivity : AppCompatActivity() {
                 ).show()
             } catch (e: IllegalArgumentException) {
                 if (e.message?.contains("Password required") == true) {
-                    promptPasswordForColorNoteRestore(uri)
+                    promptPasswordForEncryptedRestore(uri)
                 } else {
                     Toast.makeText(this@SettingsActivity, e.message ?: getString(R.string.msg_restore_failed), Toast.LENGTH_SHORT).show()
                 }
@@ -355,14 +355,14 @@ class SettingsActivity : AppCompatActivity() {
         }
     }
 
-    private fun promptPasswordForColorNoteRestore(uri: Uri) {
+    private fun promptPasswordForEncryptedRestore(uri: Uri) {
         val view = layoutInflater.inflate(R.layout.dialog_password, null)
         val editPassword = view.findViewById<EditText>(R.id.edit_password)
-        editPassword.hint = "ColorNote backup password"
+        editPassword.hint = "Backup password"
 
         AlertDialog.Builder(this)
             .setTitle("Encrypted Backup")
-            .setMessage("This ColorNote backup file is protected with a custom password. Please enter the password to restore:")
+            .setMessage("This backup file is protected with a custom password. Please enter the password to restore:")
             .setView(view)
             .setPositiveButton(R.string.action_done) { _, _ ->
                 val entered = editPassword.text.toString()
@@ -404,7 +404,7 @@ class SettingsActivity : AppCompatActivity() {
                 ).show()
             } catch (e: IllegalArgumentException) {
                 if (e.message?.contains("Password required") == true) {
-                    promptPasswordForColorNoteFileRestore(file)
+                    promptPasswordForEncryptedFileRestore(file)
                 } else {
                     Toast.makeText(this@SettingsActivity, e.message ?: getString(R.string.msg_restore_failed), Toast.LENGTH_SHORT).show()
                 }
@@ -414,14 +414,14 @@ class SettingsActivity : AppCompatActivity() {
         }
     }
 
-    private fun promptPasswordForColorNoteFileRestore(file: File) {
+    private fun promptPasswordForEncryptedFileRestore(file: File) {
         val view = layoutInflater.inflate(R.layout.dialog_password, null)
         val editPassword = view.findViewById<EditText>(R.id.edit_password)
-        editPassword.hint = "ColorNote backup password"
+        editPassword.hint = "Backup password"
 
         AlertDialog.Builder(this)
             .setTitle("Encrypted Backup")
-            .setMessage("This ColorNote backup file is protected with a custom password. Please enter the password to restore:")
+            .setMessage("This backup file is protected with a custom password. Please enter the password to restore:")
             .setView(view)
             .setPositiveButton(R.string.action_done) { _, _ ->
                 val entered = editPassword.text.toString()

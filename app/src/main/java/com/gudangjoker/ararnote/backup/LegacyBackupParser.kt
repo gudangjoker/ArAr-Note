@@ -7,15 +7,16 @@ import javax.crypto.Cipher
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
-object ColorNoteBackupParser {
+object LegacyBackupParser {
 
     private val NOTE_MAGIC = byteArrayOf(0x00, 0x4E, 0x00, 0x4F, 0x00, 0x54, 0x00, 0x45)
-    private val FIXED_SALT = "ColorNote Fixed Salt".toByteArray(Charsets.UTF_8)
+    // Fixed salt required for legacy encrypted backup compatibility
+    private val LEGACY_SALT = "ColorNote Fixed Salt".toByteArray(Charsets.UTF_8)
 
     /**
-     * Checks whether the given byte array begins with ColorNote's "NOTE" (UTF-16BE) magic header.
+     * Checks whether the given byte array begins with the "NOTE" (UTF-16BE) magic header.
      */
-    fun isColorNoteBackup(header: ByteArray): Boolean {
+    fun isLegacyEncryptedBackup(header: ByteArray): Boolean {
         if (header.size < 8) return false
         for (i in 0 until 8) {
             if (header[i] != NOTE_MAGIC[i]) return false
@@ -25,7 +26,7 @@ object ColorNoteBackupParser {
 
     /**
      * Derives AES-128 key and IV using OpenSSL EVP_BytesToKey (MD5, 1 iteration)
-     * as used by ColorNote's PBEWITHMD5AND128BITAES-CBC-OPENSSL cipher.
+     * as used by legacy PBEWITHMD5AND128BITAES-CBC-OPENSSL cipher.
      */
     fun deriveKeyAndIv(password: String): Pair<SecretKeySpec, IvParameterSpec> {
         val passBytes = password.toByteArray(Charsets.UTF_8)
@@ -33,33 +34,33 @@ object ColorNoteBackupParser {
 
         // First hash: key = MD5(password + salt)
         md5.update(passBytes)
-        md5.update(FIXED_SALT)
+        md5.update(LEGACY_SALT)
         val keyBytes = md5.digest()
 
         // Second hash: iv = MD5(key + password + salt)
         md5.reset()
         md5.update(keyBytes)
         md5.update(passBytes)
-        md5.update(FIXED_SALT)
+        md5.update(LEGACY_SALT)
         val ivBytes = md5.digest()
 
         return Pair(SecretKeySpec(keyBytes, "AES"), IvParameterSpec(ivBytes))
     }
 
     /**
-     * Decrypts and parses a ColorNote binary backup file into a list of NoteEntity objects.
+     * Decrypts and parses a legacy binary backup file into a list of NoteEntity objects.
      */
-    fun parseColorNoteBackup(
+    fun parseLegacyBackup(
         fileBytes: ByteArray,
         password: String = "0000"
     ): List<NoteEntity> {
-        if (!isColorNoteBackup(fileBytes)) {
-            throw IllegalArgumentException("Not a valid ColorNote backup file (missing NOTE magic header)")
+        if (!isLegacyEncryptedBackup(fileBytes)) {
+            throw IllegalArgumentException("Not a valid encrypted backup file (missing magic header)")
         }
 
         val (keySpec, ivSpec) = deriveKeyAndIv(password)
 
-        // ColorNote v2+ files start encrypted payload at offset 28; older v1 files at offset 16.
+        // Legacy format v2+ files start encrypted payload at offset 28; older v1 files at offset 16.
         val candidateOffsets = listOf(28, 16)
         var decryptedBytes: ByteArray? = null
 
@@ -77,7 +78,7 @@ object ColorNoteBackupParser {
         }
 
         if (decryptedBytes == null) {
-            throw IllegalArgumentException("Failed to decrypt ColorNote backup with password: $password")
+            throw IllegalArgumentException("Failed to decrypt backup with password: $password")
         }
 
         val decryptedText = String(decryptedBytes, Charsets.UTF_8)
@@ -89,7 +90,6 @@ object ColorNoteBackupParser {
      */
     private fun extractNotesFromDecryptedText(decryptedText: String): List<NoteEntity> {
         val restoredNotes = mutableListOf<NoteEntity>()
-        // ColorNote records are separated by null delimiters (\u0000\u0000..)
         val placeholder = "---JSON-RECORD-SEPARATOR---"
         val cleaned = decryptedText.replace(Regex("(?s)\\u0000\\u0000.."), placeholder)
         val records = cleaned.split(placeholder)
@@ -102,7 +102,7 @@ object ColorNoteBackupParser {
                 val jsonStr = trimmed.substring(firstBrace, lastBrace + 1)
                 try {
                     val obj = JSONObject(jsonStr)
-                    // Identify note objects by presence of standard ColorNote columns
+                    // Identify note objects by presence of standard note columns
                     if (obj.has("_id") || obj.has("created_date") || (obj.has("title") && obj.has("note"))) {
                         val note = NoteEntity(
                             id = 0L, // Auto-generate new primary key in Room to preserve all existing notes
@@ -130,7 +130,7 @@ object ColorNoteBackupParser {
                         restoredNotes.add(note)
                     }
                 } catch (e: Exception) {
-                    // Skip non-note objects (e.g. account credentials, sync logs, etc.)
+                    // Skip non-note objects
                 }
             }
         }
