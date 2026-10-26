@@ -8,6 +8,8 @@ import org.json.JSONObject
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
+import java.io.InputStream
+import java.io.OutputStream
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -16,7 +18,7 @@ class BackupManager(private val context: Context) {
 
     private val db = AppDatabase.getDatabase(context)
 
-    suspend fun createBackup(): File {
+    suspend fun createBackupJson(): Pair<String, Int> {
         val notes = db.noteDao().getAllNotesForBackup()
         val rootObj = JSONObject()
         rootObj.put("app", "ArAr Note")
@@ -50,6 +52,20 @@ class BackupManager(private val context: Context) {
             notesArray.put(obj)
         }
         rootObj.put("notes", notesArray)
+        return Pair(rootObj.toString(2), notes.size)
+    }
+
+    suspend fun writeBackupToStream(outputStream: OutputStream): Int {
+        val (jsonString, count) = createBackupJson()
+        outputStream.bufferedWriter(Charsets.UTF_8).use { writer ->
+            writer.write(jsonString)
+            writer.flush()
+        }
+        return count
+    }
+
+    suspend fun createBackup(): File {
+        val (jsonString, _) = createBackupJson()
 
         val backupDir = File(context.getExternalFilesDir(null), "backup")
         if (!backupDir.exists()) {
@@ -61,14 +77,14 @@ class BackupManager(private val context: Context) {
         val backupFile = File(backupDir, fileName)
 
         FileOutputStream(backupFile).use { fos ->
-            fos.write(rootObj.toString(2).toByteArray(Charsets.UTF_8))
+            fos.write(jsonString.toByteArray(Charsets.UTF_8))
         }
 
         return backupFile
     }
 
-    suspend fun restoreBackup(file: File): Int {
-        val content = FileInputStream(file).bufferedReader(Charsets.UTF_8).use { it.readText() }
+    suspend fun restoreBackup(inputStream: InputStream): Int {
+        val content = inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
         val rootObj = JSONObject(content)
         val notesArray = rootObj.getJSONArray("notes")
         val restoredNotes = mutableListOf<NoteEntity>()
@@ -103,5 +119,9 @@ class BackupManager(private val context: Context) {
 
         db.noteDao().insertAll(restoredNotes)
         return restoredNotes.size
+    }
+
+    suspend fun restoreBackup(file: File): Int {
+        return FileInputStream(file).use { restoreBackup(it) }
     }
 }

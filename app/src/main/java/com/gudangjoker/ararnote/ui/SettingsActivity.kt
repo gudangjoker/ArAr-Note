@@ -1,9 +1,11 @@
 package com.gudangjoker.ararnote.ui
 
+import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.widget.EditText
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
@@ -12,14 +14,36 @@ import com.gudangjoker.ararnote.backup.BackupManager
 import com.gudangjoker.ararnote.databinding.ActivitySettingsBinding
 import com.gudangjoker.ararnote.security.BiometricHelper
 import com.gudangjoker.ararnote.security.PasswordManager
+import com.gudangjoker.ararnote.widget.NoteWidgetProvider
 import kotlinx.coroutines.launch
 import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class SettingsActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivitySettingsBinding
     private lateinit var passwordManager: PasswordManager
     private lateinit var backupManager: BackupManager
+
+    // Storage Access Framework (SAF) Launcher for saving backup to Google Drive / Cloud / Local
+    private val createBackupLauncher = registerForActivityResult(
+        ActivityResultContracts.CreateDocument("application/octet-stream")
+    ) { uri: Uri? ->
+        if (uri != null) {
+            performBackupToUri(uri)
+        }
+    }
+
+    // Storage Access Framework (SAF) Launcher for browsing and restoring backup from Google Drive / Cloud / Local
+    private val openBackupLauncher = registerForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            confirmAndRestoreFromUri(uri)
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,11 +69,11 @@ class SettingsActivity : AppCompatActivity() {
         }
 
         binding.btnSettingBackup.setOnClickListener {
-            performBackup()
+            showBackupOptionsDialog()
         }
 
         binding.btnSettingRestore.setOnClickListener {
-            showRestoreSelectionDialog()
+            showRestoreOptionsDialog()
         }
     }
 
@@ -222,7 +246,46 @@ class SettingsActivity : AppCompatActivity() {
             .show()
     }
 
-    private fun performBackup() {
+    private fun showBackupOptionsDialog() {
+        val options = arrayOf(
+            getString(R.string.backup_option_saf),
+            getString(R.string.backup_option_internal)
+        )
+        AlertDialog.Builder(this)
+            .setTitle(R.string.pref_backup)
+            .setItems(options) { _, which ->
+                when (which) {
+                    0 -> {
+                        val dateFormat = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
+                        val fileName = "ArArNote_backup_${dateFormat.format(Date())}.backup"
+                        createBackupLauncher.launch(fileName)
+                    }
+                    1 -> {
+                        performInternalBackup()
+                    }
+                }
+            }
+            .show()
+    }
+
+    private fun performBackupToUri(uri: Uri) {
+        lifecycleScope.launch {
+            try {
+                val count = contentResolver.openOutputStream(uri)?.use { outputStream ->
+                    backupManager.writeBackupToStream(outputStream)
+                } ?: 0
+                Toast.makeText(
+                    this@SettingsActivity,
+                    "${getString(R.string.msg_backup_gdrive_success)} ($count notes)",
+                    Toast.LENGTH_LONG
+                ).show()
+            } catch (e: Exception) {
+                Toast.makeText(this@SettingsActivity, R.string.msg_backup_failed, Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun performInternalBackup() {
         lifecycleScope.launch {
             try {
                 val backupFile = backupManager.createBackup()
@@ -237,12 +300,61 @@ class SettingsActivity : AppCompatActivity() {
         }
     }
 
-    private fun showRestoreSelectionDialog() {
+    private fun showRestoreOptionsDialog() {
+        val options = arrayOf(
+            getString(R.string.restore_option_saf),
+            getString(R.string.restore_option_internal)
+        )
+        AlertDialog.Builder(this)
+            .setTitle(R.string.pref_restore)
+            .setItems(options) { _, which ->
+                when (which) {
+                    0 -> {
+                        openBackupLauncher.launch(arrayOf("*/*"))
+                    }
+                    1 -> {
+                        showInternalRestoreSelectionDialog()
+                    }
+                }
+            }
+            .show()
+    }
+
+    private fun confirmAndRestoreFromUri(uri: Uri) {
+        AlertDialog.Builder(this)
+            .setTitle(R.string.dialog_restore_confirm_title)
+            .setMessage(R.string.dialog_restore_confirm_msg)
+            .setPositiveButton(R.string.action_restore) { _, _ ->
+                performRestoreFromUri(uri)
+            }
+            .setNegativeButton(R.string.action_cancel, null)
+            .show()
+    }
+
+    private fun performRestoreFromUri(uri: Uri) {
+        lifecycleScope.launch {
+            try {
+                val count = contentResolver.openInputStream(uri)?.use { inputStream ->
+                    backupManager.restoreBackup(inputStream)
+                } ?: 0
+                NoteWidgetProvider.notifyWidgets(this@SettingsActivity)
+                Toast.makeText(
+                    this@SettingsActivity,
+                    getString(R.string.msg_restore_count, count),
+                    Toast.LENGTH_LONG
+                ).show()
+            } catch (e: Exception) {
+                Toast.makeText(this@SettingsActivity, R.string.msg_restore_failed, Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun showInternalRestoreSelectionDialog() {
         val backupDir = File(getExternalFilesDir(null), "backup")
         val files = backupDir.listFiles { _, name -> name.endsWith(".backup") }
 
         if (files.isNullOrEmpty()) {
-            Toast.makeText(this, "No backup files found in storage", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "No backup files found in internal storage", Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -259,9 +371,10 @@ class SettingsActivity : AppCompatActivity() {
         lifecycleScope.launch {
             try {
                 val count = backupManager.restoreBackup(file)
+                NoteWidgetProvider.notifyWidgets(this@SettingsActivity)
                 Toast.makeText(
                     this@SettingsActivity,
-                    "Successfully restored $count notes",
+                    getString(R.string.msg_restore_count, count),
                     Toast.LENGTH_SHORT
                 ).show()
             } catch (e: Exception) {

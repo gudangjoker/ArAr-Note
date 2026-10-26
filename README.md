@@ -53,10 +53,11 @@
    - **Archive:** Arsipkan catatan tanpa menghapusnya.
    - **Trash & Empty Trash:** Keranjang sampah dengan opsi pulihkan (*restore*) atau hapus permanen.
 
-9. **Backup & Restore Lokal (`.backup`):**
-   - Ekspor seluruh basis data catatan ke file cadangan berkas `.backup` di memori internal aplikasi.
-   - Pulihkan (*restore*) catatan dari file `.backup`.
-   - Fitur bagikan (*Share*) catatan via teks biasa.
+9. **Backup & Restore ke Google Drive, Cloud & Penyimpanan Lokal (`.backup`):**
+   - **Dukungan Google Drive (Storage Access Framework - SAF):** Simpan berkas cadangan database `.backup` langsung ke akun Google Drive pribadi, OneDrive, SD Card, atau folder perangkat tanpa perlu konfigurasi API key yang rumit.
+   - **Pemulihan Langsung dari Google Drive:** Jelajahi dan pilih berkas cadangan langsung dari Google Drive untuk memulihkan seluruh catatan secara instan.
+   - **Cadangan Internal Aplikasi:** Tetap menyediakan opsi simpan dan pulihkan cadangan cepat di penyimpanan internal aplikasi.
+   - **Sinkronisasi Widget Otomatis:** Setelah proses pemulihan, widget layar utama langsung diperbarui secara realtime.
 
 ---
 

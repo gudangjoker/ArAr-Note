@@ -77,12 +77,21 @@
     <!-- Settings -->
     <string name="pref_master_password">Master Password</string>
     <string name="pref_master_password_summary">Protect encrypted notes with a secure password</string>
-    <string name="pref_backup">Backup to Storage</string>
-    <string name="pref_backup_summary">Create a local backup file of all notes</string>
-    <string name="pref_restore">Restore from Storage</string>
-    <string name="pref_restore_summary">Restore notes from a backup file</string>
+    <string name="pref_backup">Backup to Google Drive / Storage</string>
+    <string name="pref_backup_summary">Save full backup directly to Google Drive, SD card, or device</string>
+    <string name="pref_restore">Restore from Google Drive / Storage</string>
+    <string name="pref_restore_summary">Restore notes from Google Drive or local backup file</string>
     <string name="pref_default_color">Default Note Color</string>
     <string name="pref_app_version">Version 1.0.0 (ArAr Note)</string>
+
+    <string name="backup_option_saf">Save to Google Drive / Cloud / Storage</string>
+    <string name="backup_option_internal">Save to Internal App Storage</string>
+    <string name="restore_option_saf">Browse Google Drive / Storage (SAF)</string>
+    <string name="restore_option_internal">Restore from Internal App Backups</string>
+    <string name="dialog_restore_confirm_title">Restore Notes</string>
+    <string name="dialog_restore_confirm_msg">Are you sure you want to restore notes from this backup file? Restored notes will be imported into your database.</string>
+    <string name="msg_backup_gdrive_success">Backup saved successfully</string>
+    <string name="msg_restore_count">Successfully restored %d notes</string>
 
     <string name="widget_select_note">Select a note to pin as Sticky Widget</string>
 
