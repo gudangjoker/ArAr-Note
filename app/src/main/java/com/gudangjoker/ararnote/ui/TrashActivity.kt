@@ -13,6 +13,7 @@ import com.gudangjoker.ararnote.R
 import com.gudangjoker.ararnote.data.NoteEntity
 import com.gudangjoker.ararnote.databinding.ActivityTrashBinding
 import com.gudangjoker.ararnote.ui.adapter.NoteListAdapter
+import com.gudangjoker.ararnote.ui.util.DisplayUtils
 import com.gudangjoker.ararnote.ui.viewmodel.NoteViewModel
 import com.gudangjoker.ararnote.ui.viewmodel.NoteViewModelFactory
 import kotlinx.coroutines.flow.collectLatest
@@ -30,6 +31,7 @@ class TrashActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        DisplayUtils.optimizeWindowForHighRefreshRate(this)
         binding = ActivityTrashBinding.inflate(layoutInflater)
         setContentView(binding.root)
 

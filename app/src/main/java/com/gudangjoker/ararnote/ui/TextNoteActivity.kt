@@ -31,6 +31,7 @@ import com.gudangjoker.ararnote.export.ExportManager
 import com.gudangjoker.ararnote.reminder.ReminderScheduler
 import com.gudangjoker.ararnote.security.CryptoManager
 import com.gudangjoker.ararnote.security.PasswordManager
+import com.gudangjoker.ararnote.ui.util.DisplayUtils
 import com.gudangjoker.ararnote.ui.viewmodel.NoteViewModel
 import com.gudangjoker.ararnote.ui.viewmodel.NoteViewModelFactory
 import kotlinx.coroutines.launch
@@ -57,6 +58,7 @@ class TextNoteActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        DisplayUtils.optimizeWindowForHighRefreshRate(this)
         binding = ActivityTextNoteBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
@@ -67,6 +69,11 @@ class TextNoteActivity : AppCompatActivity() {
 
         currentNoteId = intent.getLongExtra("extra_note_id", 0L)
         activePassword = intent.getStringExtra("extra_password")
+
+        val presetReminder = intent.getLongExtra("extra_preset_reminder", 0L)
+        if (presetReminder > 0) {
+            reminderTimestamp = presetReminder
+        }
 
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {

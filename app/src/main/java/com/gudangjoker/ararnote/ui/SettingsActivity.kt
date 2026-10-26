@@ -14,6 +14,7 @@ import com.gudangjoker.ararnote.backup.BackupManager
 import com.gudangjoker.ararnote.databinding.ActivitySettingsBinding
 import com.gudangjoker.ararnote.security.BiometricHelper
 import com.gudangjoker.ararnote.security.PasswordManager
+import com.gudangjoker.ararnote.ui.util.DisplayUtils
 import com.gudangjoker.ararnote.widget.NoteWidgetProvider
 import kotlinx.coroutines.launch
 import java.io.File
@@ -47,6 +48,7 @@ class SettingsActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        DisplayUtils.optimizeWindowForHighRefreshRate(this)
         binding = ActivitySettingsBinding.inflate(layoutInflater)
         setContentView(binding.root)
 

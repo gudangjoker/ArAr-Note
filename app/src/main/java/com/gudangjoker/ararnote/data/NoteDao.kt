@@ -72,4 +72,11 @@ interface NoteDao {
     // Scheduled Reminders
     @Query("SELECT * FROM notes WHERE active_state = 0 AND reminder_date > :nowTimestamp")
     suspend fun getUpcomingReminders(nowTimestamp: Long): List<NoteEntity>
+
+    // Calendar Integration
+    @Query("SELECT * FROM notes WHERE active_state = 0 AND reminder_date >= :startOfDay AND reminder_date <= :endOfDay ORDER BY importance DESC, modified_date DESC")
+    fun getNotesByReminderDateRange(startOfDay: Long, endOfDay: Long): Flow<List<NoteEntity>>
+
+    @Query("SELECT * FROM notes WHERE active_state = 0 AND reminder_date > 0")
+    fun getAllNotesWithReminders(): Flow<List<NoteEntity>>
 }

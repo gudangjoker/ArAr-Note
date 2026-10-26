@@ -6,12 +6,8 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
-import android.view.Menu
-import android.view.MenuItem
 import android.view.View
 import android.widget.EditText
-import android.widget.GridLayout
-import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
@@ -20,8 +16,11 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.google.android.material.snackbar.Snackbar
 import com.gudangjoker.ararnote.ArArNoteApp
 import com.gudangjoker.ararnote.R
 import com.gudangjoker.ararnote.data.ChecklistItem
@@ -34,6 +33,7 @@ import com.gudangjoker.ararnote.security.BiometricHelper
 import com.gudangjoker.ararnote.security.CryptoManager
 import com.gudangjoker.ararnote.security.PasswordManager
 import com.gudangjoker.ararnote.ui.adapter.NoteListAdapter
+import com.gudangjoker.ararnote.ui.util.DisplayUtils
 import com.gudangjoker.ararnote.ui.viewmodel.NoteViewModel
 import com.gudangjoker.ararnote.ui.viewmodel.NoteViewModelFactory
 import com.gudangjoker.ararnote.ui.viewmodel.SortOrder
@@ -55,6 +55,8 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        DisplayUtils.optimizeWindowForHighRefreshRate(this)
+
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
@@ -62,14 +64,77 @@ class MainActivity : AppCompatActivity() {
         isGridMode = prefs.getBoolean("is_grid_mode", true)
         passwordManager = PasswordManager(this)
 
-        setSupportActionBar(binding.toolbar)
-        binding.toolbar.title = getString(R.string.title_notes)
-
+        setupTopSearchBar()
         setupRecyclerView()
         setupBottomNav()
         setupFab()
         setupColorFilterChips()
         observeNotes()
+    }
+
+    private fun setupTopSearchBar() {
+        binding.cardSearch.setOnClickListener {
+            startActivity(Intent(this, SearchActivity::class.java))
+        }
+
+        binding.btnViewMode.setImageResource(if (isGridMode) R.drawable.ic_list else R.drawable.ic_grid)
+        binding.btnViewMode.setOnClickListener {
+            isGridMode = !isGridMode
+            prefs.edit().putBoolean("is_grid_mode", isGridMode).apply()
+            binding.btnViewMode.setImageResource(if (isGridMode) R.drawable.ic_list else R.drawable.ic_grid)
+            updateLayoutManager()
+            DisplayUtils.performHapticFeedback(this)
+        }
+
+        binding.btnSort.setOnClickListener {
+            showSortOptionsDialog()
+        }
+
+        binding.btnColorFilter.setOnClickListener {
+            val isVisible = binding.scrollColorFilter.visibility == View.VISIBLE
+            binding.scrollColorFilter.visibility = if (isVisible) View.GONE else View.VISIBLE
+            DisplayUtils.performHapticFeedback(this)
+        }
+
+        binding.btnSettings.setOnClickListener {
+            startActivity(Intent(this, SettingsActivity::class.java))
+        }
+    }
+
+    private fun showSortOptionsDialog() {
+        val currentSort = viewModel.sortOrder.value
+        val options = arrayOf(
+            getString(R.string.sort_modified),
+            getString(R.string.sort_created),
+            getString(R.string.sort_title),
+            getString(R.string.sort_color),
+            getString(R.string.sort_reminder)
+        )
+        val selectedIndex = when (currentSort) {
+            SortOrder.MODIFIED -> 0
+            SortOrder.CREATED -> 1
+            SortOrder.TITLE -> 2
+            SortOrder.COLOR -> 3
+            SortOrder.REMINDER -> 4
+        }
+
+        AlertDialog.Builder(this)
+            .setTitle(R.string.action_sort)
+            .setSingleChoiceItems(options, selectedIndex) { dialog, which ->
+                val chosenOrder = when (which) {
+                    0 -> SortOrder.MODIFIED
+                    1 -> SortOrder.CREATED
+                    2 -> SortOrder.TITLE
+                    3 -> SortOrder.COLOR
+                    4 -> SortOrder.REMINDER
+                    else -> SortOrder.MODIFIED
+                }
+                viewModel.setSortOrder(chosenOrder)
+                DisplayUtils.performHapticFeedback(this)
+                dialog.dismiss()
+            }
+            .setNegativeButton(R.string.action_cancel, null)
+            .show()
     }
 
     private fun setupRecyclerView() {
@@ -79,8 +144,47 @@ class MainActivity : AppCompatActivity() {
             onNoteLongClick = { note -> showNoteOptionsDialog(note); true }
         )
 
+        binding.recyclerNotes.apply {
+            setHasFixedSize(true)
+            setItemViewCacheSize(30)
+            adapter = this@MainActivity.adapter
+        }
         updateLayoutManager()
-        binding.recyclerNotes.adapter = adapter
+        setupSwipeToActions()
+    }
+
+    private fun setupSwipeToActions() {
+        val swipeCallback = object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
+            override fun onMove(
+                recyclerView: RecyclerView,
+                viewHolder: RecyclerView.ViewHolder,
+                target: RecyclerView.ViewHolder
+            ): Boolean = false
+
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+                val position = viewHolder.adapterPosition
+                if (position in 0 until adapter.currentList.size) {
+                    val note = adapter.currentList[position]
+                    DisplayUtils.performHapticFeedback(this@MainActivity)
+                    if (direction == ItemTouchHelper.RIGHT) {
+                        viewModel.moveToArchive(note)
+                        Snackbar.make(binding.root, R.string.msg_note_archived, Snackbar.LENGTH_LONG)
+                            .setAction(R.string.action_undo) {
+                                viewModel.unarchiveNote(note)
+                            }
+                            .show()
+                    } else {
+                        viewModel.moveToTrash(note)
+                        Snackbar.make(binding.root, R.string.msg_note_deleted, Snackbar.LENGTH_LONG)
+                            .setAction(R.string.action_undo) {
+                                viewModel.restoreFromTrash(note)
+                            }
+                            .show()
+                    }
+                }
+            }
+        }
+        ItemTouchHelper(swipeCallback).attachToRecyclerView(binding.recyclerNotes)
     }
 
     private fun updateLayoutManager() {
@@ -93,9 +197,17 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupBottomNav() {
+        binding.bottomNavigation.selectedItemId = R.id.nav_notes
         binding.bottomNavigation.setOnItemSelectedListener { item ->
             when (item.itemId) {
-                R.id.nav_notes -> true
+                R.id.nav_notes -> {
+                    binding.recyclerNotes.smoothScrollToPosition(0)
+                    true
+                }
+                R.id.nav_calendar -> {
+                    startActivity(Intent(this, CalendarActivity::class.java))
+                    false
+                }
                 R.id.nav_archive -> {
                     startActivity(Intent(this, ArchiveActivity::class.java))
                     false
@@ -111,6 +223,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupFab() {
         binding.fabAdd.setOnClickListener {
+            DisplayUtils.performHapticFeedback(this)
             showAddNoteTypeDialog()
         }
     }
@@ -351,6 +464,7 @@ class MainActivity : AppCompatActivity() {
 
         tv.setOnClickListener {
             viewModel.setColorFilter(colorIndex)
+            DisplayUtils.performHapticFeedback(this)
         }
 
         return tv
@@ -360,61 +474,8 @@ class MainActivity : AppCompatActivity() {
         lifecycleScope.launch {
             viewModel.activeNotes.collectLatest { notes ->
                 adapter.submitList(notes)
-                binding.textEmpty.visibility = if (notes.isEmpty()) View.VISIBLE else View.GONE
+                binding.layoutEmptyState.visibility = if (notes.isEmpty()) View.VISIBLE else View.GONE
             }
-        }
-    }
-
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.main_menu, menu)
-        val viewModeItem = menu.findItem(R.id.action_view_mode)
-        viewModeItem.setIcon(if (isGridMode) R.drawable.ic_list else R.drawable.ic_grid)
-        return true
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            R.id.action_search -> {
-                startActivity(Intent(this, SearchActivity::class.java))
-                true
-            }
-            R.id.action_view_mode -> {
-                isGridMode = !isGridMode
-                prefs.edit().putBoolean("is_grid_mode", isGridMode).apply()
-                item.setIcon(if (isGridMode) R.drawable.ic_list else R.drawable.ic_grid)
-                updateLayoutManager()
-                true
-            }
-            R.id.sort_by_modified -> {
-                viewModel.setSortOrder(SortOrder.MODIFIED)
-                true
-            }
-            R.id.sort_by_created -> {
-                viewModel.setSortOrder(SortOrder.CREATED)
-                true
-            }
-            R.id.sort_by_title -> {
-                viewModel.setSortOrder(SortOrder.TITLE)
-                true
-            }
-            R.id.sort_by_color -> {
-                viewModel.setSortOrder(SortOrder.COLOR)
-                true
-            }
-            R.id.sort_by_reminder -> {
-                viewModel.setSortOrder(SortOrder.REMINDER)
-                true
-            }
-            R.id.action_filter_color -> {
-                val isVisible = binding.scrollColorFilter.visibility == View.VISIBLE
-                binding.scrollColorFilter.visibility = if (isVisible) View.GONE else View.VISIBLE
-                true
-            }
-            R.id.action_settings -> {
-                startActivity(Intent(this, SettingsActivity::class.java))
-                true
-            }
-            else -> super.onOptionsItemSelected(item)
         }
     }
 }

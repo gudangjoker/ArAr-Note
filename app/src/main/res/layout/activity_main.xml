@@ -2,47 +2,129 @@
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="#F8F9FA">
 
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:theme="@style/Widget.ArArNote.Toolbar">
+        android:background="@android:color/transparent"
+        app:elevation="0dp">
 
-        <androidx.appcompat.widget.Toolbar
-            android:id="@+id/toolbar"
-            android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            android:background="?attr/colorPrimary"
-            app:popupTheme="@style/ThemeOverlay.MaterialComponents.Light" />
-
-        <!-- Color Filter Strip -->
-        <HorizontalScrollView
-            android:id="@+id/scroll_color_filter"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="?attr/colorPrimary"
-            android:paddingStart="8dp"
-            android:paddingEnd="8dp"
-            android:paddingBottom="6dp"
-            android:scrollbars="none"
-            android:visibility="gone">
+            android:orientation="vertical"
+            android:paddingStart="12dp"
+            android:paddingTop="10dp"
+            android:paddingEnd="12dp"
+            android:paddingBottom="6dp">
 
-            <LinearLayout
-                android:id="@+id/layout_color_chips"
-                android:layout_width="wrap_content"
+            <!-- Modern Search & Header Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/card_search"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:clickable="true"
+                android:focusable="true"
+                app:cardBackgroundColor="#FFFFFF"
+                app:cardCornerRadius="26dp"
+                app:cardElevation="2dp"
+                app:strokeColor="#15000000"
+                app:strokeWidth="1dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="8dp">
+
+                    <ImageView
+                        android:id="@+id/img_app_logo"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:contentDescription="App Logo"
+                        android:src="@drawable/app_logo" />
+
+                    <TextView
+                        android:id="@+id/text_search_hint"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_marginStart="10dp"
+                        android:layout_weight="1"
+                        android:gravity="center_vertical"
+                        android:text="@string/hint_search"
+                        android:textColor="@color/text_hint"
+                        android:textSize="14sp" />
+
+                    <ImageButton
+                        android:id="@+id/btn_view_mode"
+                        android:layout_width="38dp"
+                        android:layout_height="38dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="@string/action_view_mode"
+                        android:src="@drawable/ic_grid"
+                        app:tint="#5F6368" />
+
+                    <ImageButton
+                        android:id="@+id/btn_sort"
+                        android:layout_width="38dp"
+                        android:layout_height="38dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="@string/action_sort"
+                        android:src="@drawable/ic_sort"
+                        app:tint="#5F6368" />
+
+                    <ImageButton
+                        android:id="@+id/btn_color_filter"
+                        android:layout_width="38dp"
+                        android:layout_height="38dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="@string/action_color"
+                        android:src="@drawable/ic_palette"
+                        app:tint="#5F6368" />
+
+                    <ImageButton
+                        android:id="@+id/btn_settings"
+                        android:layout_width="38dp"
+                        android:layout_height="38dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="@string/title_settings"
+                        android:src="@drawable/ic_settings"
+                        app:tint="#5F6368" />
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Color Filter Strip -->
+            <HorizontalScrollView
+                android:id="@+id/scroll_color_filter"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:orientation="horizontal" />
+                android:layout_marginTop="8dp"
+                android:scrollbars="none"
+                android:visibility="gone">
 
-        </HorizontalScrollView>
+                <LinearLayout
+                    android:id="@+id/layout_color_chips"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal" />
+
+            </HorizontalScrollView>
+
+        </LinearLayout>
 
     </com.google.android.material.appbar.AppBarLayout>
 
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginBottom="56dp"
+        android:layout_marginBottom="60dp"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
         <androidx.recyclerview.widget.RecyclerView
@@ -50,19 +132,40 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:clipToPadding="false"
-            android:padding="4dp" />
+            android:paddingStart="6dp"
+            android:paddingTop="4dp"
+            android:paddingEnd="6dp"
+            android:paddingBottom="88dp" />
 
-        <TextView
-            android:id="@+id/text_empty"
+        <LinearLayout
+            android:id="@+id/layout_empty_state"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:gravity="center"
-            android:lineSpacingExtra="4dp"
-            android:text="@string/empty_notes"
-            android:textColor="@color/text_secondary"
-            android:textSize="15sp"
-            android:visibility="gone" />
+            android:orientation="vertical"
+            android:padding="24dp"
+            android:visibility="gone">
+
+            <ImageView
+                android:layout_width="72dp"
+                android:layout_height="72dp"
+                android:alpha="0.4"
+                android:contentDescription="Empty"
+                android:src="@drawable/app_logo" />
+
+            <TextView
+                android:id="@+id/text_empty"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:gravity="center"
+                android:lineSpacingExtra="4dp"
+                android:text="@string/empty_notes"
+                android:textColor="@color/text_secondary"
+                android:textSize="15sp" />
+
+        </LinearLayout>
 
     </FrameLayout>
 
@@ -72,19 +175,23 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_marginEnd="16dp"
-        android:layout_marginBottom="72dp"
+        android:layout_marginBottom="76dp"
         android:contentDescription="@string/action_add_note"
         android:src="@drawable/ic_add"
-        app:backgroundTint="@color/accent"
+        app:backgroundTint="@color/primary"
+        app:elevation="6dp"
         app:tint="#FFFFFF" />
 
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottom_navigation"
         android:layout_width="match_parent"
-        android:layout_height="56dp"
+        android:layout_height="60dp"
         android:layout_gravity="bottom"
         android:background="@color/surface"
         app:elevation="8dp"
+        app:itemIconTint="@color/bottom_nav_selector"
+        app:itemTextColor="@color/bottom_nav_selector"
+        app:labelVisibilityMode="labeled"
         app:menu="@menu/bottom_nav_menu" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

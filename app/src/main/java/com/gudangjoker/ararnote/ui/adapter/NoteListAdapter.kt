@@ -1,17 +1,16 @@
 package com.gudangjoker.ararnote.ui.adapter
 
-import android.graphics.Paint
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
-import androidx.cardview.widget.CardView
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.card.MaterialCardView
 import com.gudangjoker.ararnote.R
 import com.gudangjoker.ararnote.data.ChecklistItem
 import com.gudangjoker.ararnote.data.NoteColor
@@ -49,15 +48,19 @@ class NoteListAdapter(
     }
 
     inner class NoteViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        private val cardNote: CardView = itemView.findViewById(R.id.card_note)
+        private val cardNote: MaterialCardView = itemView.findViewById(R.id.card_note)
         private val layoutContent: LinearLayout = itemView.findViewById(R.id.layout_content)
         private val textTitle: TextView = itemView.findViewById(R.id.text_title)
         private val textBody: TextView = itemView.findViewById(R.id.text_body)
         private val textDate: TextView = itemView.findViewById(R.id.text_date)
         private val iconPin: ImageView = itemView.findViewById(R.id.icon_pin)
         private val iconLock: ImageView = itemView.findViewById(R.id.icon_lock)
-        private val iconReminder: ImageView = itemView.findViewById(R.id.icon_reminder)
+        private val badgeReminder: View? = itemView.findViewById(R.id.badge_reminder)
+        private val textReminderTime: TextView? = itemView.findViewById(R.id.text_reminder_time)
         private val indicatorColor: View? = itemView.findViewById(R.id.indicator_color)
+
+        private val reminderDateFormat = SimpleDateFormat("MMM d, HH:mm", Locale.getDefault())
+        private val modifiedDateFormat = SimpleDateFormat("MMM d, HH:mm", Locale.getDefault())
 
         fun bind(note: NoteEntity) {
             val context = itemView.context
@@ -65,14 +68,10 @@ class NoteListAdapter(
             val noteBgColor = ContextCompat.getColor(context, color.bgResId)
             val headerColor = ContextCompat.getColor(context, color.headerResId)
 
-            if (isGrid) {
-                cardNote.setCardBackgroundColor(noteBgColor)
-            } else {
-                cardNote.setCardBackgroundColor(noteBgColor)
-                indicatorColor?.setBackgroundColor(headerColor)
-            }
+            cardNote.setCardBackgroundColor(noteBgColor)
+            indicatorColor?.setBackgroundColor(headerColor)
 
-            // Title
+            // Title & Content
             if (note.encrypted == 1) {
                 textTitle.text = if (note.title.isNotBlank()) note.title else "🔒 Encrypted Note"
                 textBody.text = "Locked content (tap to unlock)"
@@ -95,11 +94,17 @@ class NoteListAdapter(
             // Icons
             iconPin.visibility = if (note.importance == 1) View.VISIBLE else View.GONE
             iconLock.visibility = if (note.encrypted == 1) View.VISIBLE else View.GONE
-            iconReminder.visibility = if (note.reminderDate > 0) View.VISIBLE else View.GONE
+
+            // Reminder Badge
+            if (note.reminderDate > 0) {
+                badgeReminder?.visibility = View.VISIBLE
+                textReminderTime?.text = reminderDateFormat.format(Date(note.reminderDate))
+            } else {
+                badgeReminder?.visibility = View.GONE
+            }
 
             // Date
-            val sdf = SimpleDateFormat("MMM d, HH:mm", Locale.getDefault())
-            textDate.text = sdf.format(Date(note.modifiedDate))
+            textDate.text = modifiedDateFormat.format(Date(note.modifiedDate))
 
             itemView.setOnClickListener { onNoteClick(note) }
             itemView.setOnLongClickListener { onNoteLongClick(note) }

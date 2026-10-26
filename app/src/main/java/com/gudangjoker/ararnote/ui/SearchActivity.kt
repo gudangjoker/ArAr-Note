@@ -20,6 +20,7 @@ import com.gudangjoker.ararnote.databinding.ActivitySearchBinding
 import com.gudangjoker.ararnote.security.BiometricHelper
 import com.gudangjoker.ararnote.security.PasswordManager
 import com.gudangjoker.ararnote.ui.adapter.NoteListAdapter
+import com.gudangjoker.ararnote.ui.util.DisplayUtils
 import com.gudangjoker.ararnote.ui.viewmodel.NoteViewModel
 import com.gudangjoker.ararnote.ui.viewmodel.NoteViewModelFactory
 import kotlinx.coroutines.flow.collectLatest
@@ -38,6 +39,7 @@ class SearchActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        DisplayUtils.optimizeWindowForHighRefreshRate(this)
         binding = ActivitySearchBinding.inflate(layoutInflater)
         setContentView(binding.root)
 

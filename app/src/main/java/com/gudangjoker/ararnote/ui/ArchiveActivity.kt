@@ -15,6 +15,7 @@ import com.gudangjoker.ararnote.data.NoteEntity
 import com.gudangjoker.ararnote.data.NoteType
 import com.gudangjoker.ararnote.databinding.ActivityArchiveBinding
 import com.gudangjoker.ararnote.ui.adapter.NoteListAdapter
+import com.gudangjoker.ararnote.ui.util.DisplayUtils
 import com.gudangjoker.ararnote.ui.viewmodel.NoteViewModel
 import com.gudangjoker.ararnote.ui.viewmodel.NoteViewModelFactory
 import kotlinx.coroutines.flow.collectLatest
@@ -32,6 +33,7 @@ class ArchiveActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        DisplayUtils.optimizeWindowForHighRefreshRate(this)
         binding = ActivityArchiveBinding.inflate(layoutInflater)
         setContentView(binding.root)
 

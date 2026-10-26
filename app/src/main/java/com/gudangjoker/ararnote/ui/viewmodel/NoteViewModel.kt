@@ -51,6 +51,25 @@ class NoteViewModel(private val noteDao: NoteDao) : ViewModel() {
 
     val archivedNotes: Flow<List<NoteEntity>> = noteDao.getArchivedNotes()
     val trashNotes: Flow<List<NoteEntity>> = noteDao.getTrashNotes()
+    val allNotesWithReminders: Flow<List<NoteEntity>> = noteDao.getAllNotesWithReminders()
+
+    fun getNotesForDate(dateTimestamp: Long): Flow<List<NoteEntity>> {
+        val cal = java.util.Calendar.getInstance()
+        cal.timeInMillis = dateTimestamp
+        cal.set(java.util.Calendar.HOUR_OF_DAY, 0)
+        cal.set(java.util.Calendar.MINUTE, 0)
+        cal.set(java.util.Calendar.SECOND, 0)
+        cal.set(java.util.Calendar.MILLISECOND, 0)
+        val startOfDay = cal.timeInMillis
+
+        cal.set(java.util.Calendar.HOUR_OF_DAY, 23)
+        cal.set(java.util.Calendar.MINUTE, 59)
+        cal.set(java.util.Calendar.SECOND, 59)
+        cal.set(java.util.Calendar.MILLISECOND, 999)
+        val endOfDay = cal.timeInMillis
+
+        return noteDao.getNotesByReminderDateRange(startOfDay, endOfDay)
+    }
 
     fun setSortOrder(order: SortOrder) {
         _sortOrder.value = order

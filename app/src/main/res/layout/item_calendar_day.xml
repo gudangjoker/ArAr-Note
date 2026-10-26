@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/layout_cell"
+    android:layout_width="match_parent"
+    android:layout_height="48dp"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?attr/selectableItemBackground"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:padding="2dp">
+
+    <TextView
+        android:id="@+id/text_day_number"
+        android:layout_width="28dp"
+        android:layout_height="28dp"
+        android:gravity="center"
+        android:textColor="@color/text_primary"
+        android:textSize="13sp"
+        android:textStyle="normal" />
+
+    <!-- Container for colored dots indicating notes on this date -->
+    <LinearLayout
+        android:id="@+id/layout_note_dots"
+        android:layout_width="wrap_content"
+        android:layout_height="6dp"
+        android:layout_marginTop="2dp"
+        android:gravity="center"
+        android:orientation="horizontal" />
+
+</LinearLayout>
