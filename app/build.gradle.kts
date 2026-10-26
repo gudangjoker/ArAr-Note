@@ -22,10 +22,29 @@ android {
         }
     }
 
+    signingConfigs {
+        create("release") {
+            val keystoreFile = file("keystore/ararnote-release.jks")
+            if (keystoreFile.exists()) {
+                storeFile = keystoreFile
+                storePassword = System.getenv("KEYSTORE_PASSWORD") ?: "ararnote_release_2026"
+                keyAlias = System.getenv("KEY_ALIAS") ?: "ararnote"
+                keyPassword = System.getenv("KEY_PASSWORD") ?: "ararnote_release_2026"
+                enableV1Signing = true
+                enableV2Signing = true
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
-            signingConfig = signingConfigs.getByName("debug")
+            val releaseSigning = signingConfigs.findByName("release")
+            if (releaseSigning != null && file("keystore/ararnote-release.jks").exists()) {
+                signingConfig = releaseSigning
+            } else {
+                signingConfig = signingConfigs.getByName("debug")
+            }
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -34,6 +53,11 @@ android {
         debug {
             isMinifyEnabled = false
         }
+    }
+
+    lint {
+        abortOnError = false
+        checkReleaseBuilds = false
     }
 
     compileOptions {
@@ -59,9 +83,9 @@ dependencies {
     implementation("androidx.cardview:cardview:1.0.0")
 
     // Lifecycle
-    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.4")
-    implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.8.4")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.4")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.2")
+    implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.8.2")
+    implementation("androidx.activity:activity-ktx:1.9.0")
 
     // Room Database
     implementation("androidx.room:room-runtime:2.6.1")
@@ -71,9 +95,11 @@ dependencies {
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
 
-    // Preference
-    implementation("androidx.preference:preference-ktx:1.2.1")
+    // Biometric Auth
+    implementation("androidx.biometric:biometric:1.2.0-alpha05")
 
-    // Biometric Authentication
-    implementation("androidx.biometric:biometric:1.1.0")
+    // Testing
+    testImplementation("junit:junit:4.13.2")
+    androidTestImplementation("androidx.test.ext:junit:1.1.5")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
 }

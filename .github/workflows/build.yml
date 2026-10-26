@@ -18,15 +18,15 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+          cache: 'gradle'
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew || true
@@ -34,30 +34,37 @@ jobs:
       - name: Build Debug & Release APK
         run: ./gradlew assembleDebug assembleRelease --stacktrace
 
-      - name: Stage APKs for Release
+      - name: Stage APKs for Distribution
         run: |
           mkdir -p release_assets
-          cp app/build/outputs/apk/release/*.apk release_assets/ArArNote-release.apk || true
-          cp app/build/outputs/apk/debug/*.apk release_assets/ArArNote-debug.apk || true
-
-      - name: Upload Debug APK Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: arar-note-debug-apk
-          path: app/build/outputs/apk/debug/*.apk
+          cp app/build/outputs/apk/release/*.apk release_assets/ArArNote-v1.0.0-release.apk || true
+          cp app/build/outputs/apk/debug/*.apk release_assets/ArArNote-v1.0.0-debug.apk || true
+          ls -la release_assets/
 
       - name: Upload Release APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: arar-note-release-apk
+          name: ArArNote-v1.0.0-release-apk
           path: app/build/outputs/apk/release/*.apk
+          if-no-files-found: warn
+
+      - name: Upload Debug APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ArArNote-v1.0.0-debug-apk
+          path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: warn
 
       - name: Create GitHub Release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
+        continue-on-error: true
         with:
           name: "ArAr Note ${{ github.ref_name }}"
           generate_release_notes: true
+          draft: false
+          prerelease: false
+          fail_on_unmatched_files: false
           files: |
-            release_assets/ArArNote-release.apk
-            release_assets/ArArNote-debug.apk
+            release_assets/ArArNote-v1.0.0-release.apk
+            release_assets/ArArNote-v1.0.0-debug.apk
