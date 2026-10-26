@@ -45,4 +45,17 @@ object DisplayUtils {
             )
         } catch (_: Exception) {}
     }
+
+    fun performHapticFeedback(activity: Activity) {
+        try {
+            activity.window.decorView.performHapticFeedback(
+                HapticFeedbackConstants.CLOCK_TICK,
+                HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING
+            )
+        } catch (_: Exception) {}
+    }
+
+    fun performHapticFeedback(view: View) {
+        triggerHapticFeedback(view)
+    }
 }

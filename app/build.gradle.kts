@@ -24,24 +24,21 @@ android {
 
     signingConfigs {
         create("release") {
-            val keystoreFile = file("keystore/ararnote-release.jks")
-            if (keystoreFile.exists()) {
-                storeFile = keystoreFile
-                storePassword = System.getenv("KEYSTORE_PASSWORD") ?: "ararnote_release_2026"
-                keyAlias = System.getenv("KEY_ALIAS") ?: "ararnote"
-                keyPassword = System.getenv("KEY_PASSWORD") ?: "ararnote_release_2026"
-                enableV1Signing = true
-                enableV2Signing = true
-            }
+            storeFile = file("keystore/ararnote-release.jks")
+            storePassword = System.getenv("KEYSTORE_PASSWORD") ?: "ararnote_release_2026"
+            keyAlias = System.getenv("KEY_ALIAS") ?: "ararnote"
+            keyPassword = System.getenv("KEY_PASSWORD") ?: "ararnote_release_2026"
+            enableV1Signing = true
+            enableV2Signing = true
         }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = false
-            val releaseSigning = signingConfigs.findByName("release")
-            if (releaseSigning != null && file("keystore/ararnote-release.jks").exists()) {
-                signingConfig = releaseSigning
+            val keystoreFile = file("keystore/ararnote-release.jks")
+            if (keystoreFile.exists()) {
+                signingConfig = signingConfigs.getByName("release")
             } else {
                 signingConfig = signingConfigs.getByName("debug")
             }
