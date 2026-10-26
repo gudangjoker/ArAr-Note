@@ -80,10 +80,13 @@ class NoteListAdapter(
                 textTitle.text = note.title.ifBlank { "Untitled" }
                 if (note.type == NoteType.CHECKLIST) {
                     val items = ChecklistItem.fromJson(note.note)
+                    val completedCount = items.count { it.checked }
+                    val totalCount = items.size
+                    val progressPrefix = if (totalCount > 0) "✓ $completedCount/$totalCount done\n" else ""
                     val preview = items.take(4).joinToString("\n") { item ->
                         (if (item.checked) "☑ " else "☐ ") + item.text
                     }
-                    textBody.text = preview.ifBlank { "(Empty checklist)" }
+                    textBody.text = (progressPrefix + preview).trim().ifBlank { "(Empty checklist)" }
                 } else {
                     textBody.text = note.note.ifBlank { "(Empty note)" }
                 }

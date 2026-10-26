@@ -20,11 +20,11 @@
    - Kuning (Default Notepad), Biru, Merah, Oranye, Hijau, Ungu, Cyan, Abu-abu, dan Gelap (*Dark/Black*).
    - Pengubah warna instan di toolbar editor dan filter warna (*chips filter*) di halaman utama.
 
-4. **Sistem Enkripsi Catatan & Master Password (AES-256-CBC):**
-   - Menggunakan algoritma `AES/CBC/PKCS5Padding` dengan derivasi kunci `PBKDF2WithHmacSHA256` dan *salt* unik.
-   - Catatan terkunci disembunyikan isinya dari daftar (*preview* terkunci).
-   - Buka kunci dengan dialog Master Password.
-   - Menu pengelolaan kata sandi: Setel, Ubah, atau Hapus Master Password.
+4. **Sistem Enkripsi Catatan, Master Password & Biometric Unlock:**
+   - Menggunakan enkripsi simetris `AES/CBC/PKCS5Padding` dengan derivasi kunci `PBKDF2WithHmacSHA256` dan *salt* unik.
+   - **Biometric Unlock (Fingerprint / Face ID):** Didukung `AndroidX Biometric` + enkripsi kunci perangkat keras `AndroidKeyStore` (AES-GCM-256) untuk membuka catatan terkunci secara instan tanpa mengetik password manual.
+   - Tetap mendukung otentikasi cadangan Master Password manual.
+   - Menu pengelolaan kata sandi di Pengaturan: Setel, Ubah, Hapus Master Password, dan Toggle Biometric.
 
 5. **Pengingat & Alarm (`ReminderScheduler`):**
    - Penjadwalan alarm persis waktu (*exact alarms*) melalui `AlarmManager`.

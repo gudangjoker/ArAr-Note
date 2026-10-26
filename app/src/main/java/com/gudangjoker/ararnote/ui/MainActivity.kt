@@ -28,6 +28,7 @@ import com.gudangjoker.ararnote.data.NoteColor
 import com.gudangjoker.ararnote.data.NoteEntity
 import com.gudangjoker.ararnote.data.NoteType
 import com.gudangjoker.ararnote.databinding.ActivityMainBinding
+import com.gudangjoker.ararnote.security.BiometricHelper
 import com.gudangjoker.ararnote.security.PasswordManager
 import com.gudangjoker.ararnote.ui.adapter.NoteListAdapter
 import com.gudangjoker.ararnote.ui.viewmodel.NoteViewModel
@@ -133,7 +134,30 @@ class MainActivity : AppCompatActivity() {
 
     private fun onNoteClicked(note: NoteEntity) {
         if (note.encrypted == 1) {
-            promptPasswordForNote(note)
+            if (passwordManager.isBiometricEnabled() && BiometricHelper.isBiometricAvailable(this)) {
+                BiometricHelper.showBiometricPrompt(
+                    activity = this,
+                    title = "Unlock " + (note.title.ifBlank { "Note" }),
+                    subtitle = "Verify fingerprint or face to open note",
+                    negativeButtonText = getString(R.string.hint_password),
+                    onSuccess = {
+                        val pwd = passwordManager.getBiometricPassword()
+                        if (pwd != null) {
+                            openNoteEditor(note, pwd)
+                        } else {
+                            promptPasswordForNote(note)
+                        }
+                    },
+                    onFallbackToPassword = {
+                        promptPasswordForNote(note)
+                    },
+                    onError = {
+                        promptPasswordForNote(note)
+                    }
+                )
+            } else {
+                promptPasswordForNote(note)
+            }
         } else {
             openNoteEditor(note)
         }

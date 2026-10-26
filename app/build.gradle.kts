@@ -72,4 +72,7 @@ dependencies {
 
     // Preference
     implementation("androidx.preference:preference-ktx:1.2.1")
+
+    // Biometric Authentication
+    implementation("androidx.biometric:biometric:1.1.0")
 }

@@ -10,6 +10,7 @@ import androidx.lifecycle.lifecycleScope
 import com.gudangjoker.ararnote.R
 import com.gudangjoker.ararnote.backup.BackupManager
 import com.gudangjoker.ararnote.databinding.ActivitySettingsBinding
+import com.gudangjoker.ararnote.security.BiometricHelper
 import com.gudangjoker.ararnote.security.PasswordManager
 import kotlinx.coroutines.launch
 import java.io.File
@@ -33,9 +34,14 @@ class SettingsActivity : AppCompatActivity() {
         supportActionBar?.title = getString(R.string.title_settings)
 
         updatePasswordStatus()
+        updateBiometricStatus()
 
         binding.btnSettingPassword.setOnClickListener {
             handlePasswordSettingClick()
+        }
+
+        binding.btnSettingBiometric.setOnClickListener {
+            handleBiometricToggle()
         }
 
         binding.btnSettingBackup.setOnClickListener {
@@ -53,6 +59,84 @@ class SettingsActivity : AppCompatActivity() {
         } else {
             binding.textPasswordStatus.text = getString(R.string.pref_master_password_summary)
         }
+    }
+
+    private fun updateBiometricStatus() {
+        val isAvailable = BiometricHelper.isBiometricAvailable(this)
+        if (!isAvailable) {
+            binding.switchBiometric.isEnabled = false
+            binding.switchBiometric.isChecked = false
+            binding.textBiometricStatus.text = "Biometric sensor not available or not enrolled"
+        } else if (!passwordManager.isPasswordSet()) {
+            binding.switchBiometric.isEnabled = false
+            binding.switchBiometric.isChecked = false
+            binding.textBiometricStatus.text = "Set a Master Password first to enable"
+        } else {
+            binding.switchBiometric.isEnabled = true
+            val isEnabled = passwordManager.isBiometricEnabled()
+            binding.switchBiometric.isChecked = isEnabled
+            binding.textBiometricStatus.text = if (isEnabled) {
+                "Enabled (Unlock with Fingerprint or Face)"
+            } else {
+                "Disabled (Tap to enable biometric unlock)"
+            }
+        }
+    }
+
+    private fun handleBiometricToggle() {
+        if (!BiometricHelper.isBiometricAvailable(this)) {
+            Toast.makeText(this, "Biometrics not available or not enrolled on this device", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        if (!passwordManager.isPasswordSet()) {
+            Toast.makeText(this, "Please set a Master Password first", Toast.LENGTH_SHORT).show()
+            showSetPasswordDialog()
+            return
+        }
+
+        if (passwordManager.isBiometricEnabled()) {
+            // Disable
+            passwordManager.setBiometricEnabled(false, null)
+            updateBiometricStatus()
+            Toast.makeText(this, "Biometric unlock disabled", Toast.LENGTH_SHORT).show()
+        } else {
+            // Enable: prompt password first, then biometric confirmation
+            promptPasswordForBiometricEnable()
+        }
+    }
+
+    private fun promptPasswordForBiometricEnable() {
+        val view = layoutInflater.inflate(R.layout.dialog_password, null)
+        val editPassword = view.findViewById<EditText>(R.id.edit_password)
+
+        AlertDialog.Builder(this)
+            .setTitle("Confirm Master Password")
+            .setView(view)
+            .setPositiveButton(R.string.action_done) { _, _ ->
+                val entered = editPassword.text.toString()
+                if (passwordManager.verifyPassword(entered)) {
+                    BiometricHelper.showBiometricPrompt(
+                        activity = this,
+                        title = "Confirm Biometric Unlock",
+                        subtitle = "Touch sensor to link biometric with Master Password",
+                        negativeButtonText = getString(R.string.action_cancel),
+                        onSuccess = {
+                            passwordManager.setBiometricEnabled(true, entered)
+                            updateBiometricStatus()
+                            Toast.makeText(this, "Biometric unlock enabled successfully", Toast.LENGTH_SHORT).show()
+                        },
+                        onFallbackToPassword = {},
+                        onError = { err ->
+                            Toast.makeText(this, err, Toast.LENGTH_SHORT).show()
+                        }
+                    )
+                } else {
+                    Toast.makeText(this, R.string.msg_wrong_password, Toast.LENGTH_SHORT).show()
+                }
+            }
+            .setNegativeButton(R.string.action_cancel, null)
+            .show()
     }
 
     private fun handlePasswordSettingClick() {
@@ -87,6 +171,7 @@ class SettingsActivity : AppCompatActivity() {
                 if (p1.isNotBlank() && p1 == p2) {
                     passwordManager.setPassword(p1)
                     updatePasswordStatus()
+                    updateBiometricStatus()
                     Toast.makeText(this, R.string.msg_password_set, Toast.LENGTH_SHORT).show()
                 } else {
                     Toast.makeText(this, "Passwords do not match", Toast.LENGTH_SHORT).show()
@@ -127,6 +212,7 @@ class SettingsActivity : AppCompatActivity() {
                 if (passwordManager.verifyPassword(entered)) {
                     passwordManager.clearPassword()
                     updatePasswordStatus()
+                    updateBiometricStatus()
                     Toast.makeText(this, R.string.msg_password_removed, Toast.LENGTH_SHORT).show()
                 } else {
                     Toast.makeText(this, R.string.msg_wrong_password, Toast.LENGTH_SHORT).show()
