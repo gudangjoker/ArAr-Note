@@ -1,8 +1,10 @@
 package com.gudangjoker.ararnote.export
 
+import android.Manifest
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
@@ -440,9 +442,21 @@ object ExportManager {
             }
             uri
         } else {
-            val dir = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "ArArNote")
-            if (!dir.exists()) dir.mkdirs()
-            val destFile = File(dir, fileName)
+            val hasWritePermission = ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE
+            ) == PackageManager.PERMISSION_GRANTED
+
+            val targetDir = if (hasWritePermission) {
+                val publicDir = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "ArArNote")
+                if (!publicDir.exists()) publicDir.mkdirs()
+                if (publicDir.canWrite()) publicDir else (context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) ?: context.filesDir)
+            } else {
+                context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) ?: context.filesDir
+            }
+
+            if (!targetDir.exists()) targetDir.mkdirs()
+            val destFile = File(targetDir, fileName)
             tempFile.copyTo(destFile, overwrite = true)
             Uri.fromFile(destFile)
         }

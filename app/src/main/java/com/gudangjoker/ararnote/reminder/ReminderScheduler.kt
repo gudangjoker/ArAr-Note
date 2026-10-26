@@ -13,6 +13,11 @@ object ReminderScheduler {
     const val EXTRA_NOTE_TITLE = "extra_note_title"
     const val EXTRA_NOTE_CONTENT = "extra_note_content"
 
+    fun getRequestCode(noteId: Long, offset: Int = 0): Int {
+        val base = (noteId xor (noteId ushr 32)).toInt() and 0x3FFFFFFF
+        return base + offset
+    }
+
     fun scheduleReminder(context: Context, note: NoteEntity) {
         if (note.reminderDate <= System.currentTimeMillis()) return
 
@@ -26,7 +31,7 @@ object ReminderScheduler {
 
         val pendingIntent = PendingIntent.getBroadcast(
             context,
-            note.id.toInt(),
+            getRequestCode(note.id),
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
@@ -62,7 +67,7 @@ object ReminderScheduler {
         }
         val pendingIntent = PendingIntent.getBroadcast(
             context,
-            noteId.toInt(),
+            getRequestCode(noteId),
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )

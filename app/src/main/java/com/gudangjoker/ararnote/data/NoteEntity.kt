@@ -2,10 +2,19 @@ package com.gudangjoker.ararnote.data
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import java.util.UUID
 
-@Entity(tableName = "notes")
+@Entity(
+    tableName = "notes",
+    indices = [
+        Index(value = ["active_state", "importance", "modified_date"]),
+        Index(value = ["active_state", "color_index"]),
+        Index(value = ["active_state", "reminder_date"]),
+        Index(value = ["uuid"], unique = true)
+    ]
+)
 data class NoteEntity(
     @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = "_id")

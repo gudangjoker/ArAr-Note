@@ -23,7 +23,7 @@ class ReminderReceiver : BroadcastReceiver() {
             }
             ACTION_SNOOZE -> {
                 val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-                notificationManager.cancel(noteId.toInt())
+                notificationManager.cancel(ReminderScheduler.getRequestCode(noteId))
 
                 // Snooze 15 minutes
                 val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as android.app.AlarmManager
@@ -35,7 +35,7 @@ class ReminderReceiver : BroadcastReceiver() {
                 }
                 val pendingIntent = PendingIntent.getBroadcast(
                     context,
-                    noteId.toInt(),
+                    ReminderScheduler.getRequestCode(noteId),
                     snoozeIntent,
                     PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
                 )
@@ -44,7 +44,7 @@ class ReminderReceiver : BroadcastReceiver() {
             }
             ACTION_DISMISS -> {
                 val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-                notificationManager.cancel(noteId.toInt())
+                notificationManager.cancel(ReminderScheduler.getRequestCode(noteId))
             }
         }
     }
@@ -55,7 +55,7 @@ class ReminderReceiver : BroadcastReceiver() {
         }
         val clickPendingIntent = PendingIntent.getActivity(
             context,
-            noteId.toInt(),
+            ReminderScheduler.getRequestCode(noteId),
             clickIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
@@ -68,7 +68,7 @@ class ReminderReceiver : BroadcastReceiver() {
         }
         val snoozePendingIntent = PendingIntent.getBroadcast(
             context,
-            (noteId + 100000).toInt(),
+            ReminderScheduler.getRequestCode(noteId, 1),
             snoozeIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
@@ -79,7 +79,7 @@ class ReminderReceiver : BroadcastReceiver() {
         }
         val dismissPendingIntent = PendingIntent.getBroadcast(
             context,
-            (noteId + 200000).toInt(),
+            ReminderScheduler.getRequestCode(noteId, 2),
             dismissIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
@@ -97,7 +97,7 @@ class ReminderReceiver : BroadcastReceiver() {
             .build()
 
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        notificationManager.notify(noteId.toInt(), notification)
+        notificationManager.notify(ReminderScheduler.getRequestCode(noteId), notification)
     }
 
     companion object {

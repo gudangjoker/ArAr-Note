@@ -22,7 +22,8 @@ object BiometricHelper {
         title: String = "Unlock with Biometrics",
         subtitle: String = "Touch the fingerprint sensor or use face unlock",
         negativeButtonText: String = "Use Password",
-        onSuccess: () -> Unit,
+        cryptoObject: BiometricPrompt.CryptoObject? = null,
+        onSuccess: (BiometricPrompt.AuthenticationResult) -> Unit,
         onFallbackToPassword: () -> Unit,
         onError: (String) -> Unit
     ) {
@@ -44,7 +45,7 @@ object BiometricHelper {
             object : BiometricPrompt.AuthenticationCallback() {
                 override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
                     super.onAuthenticationSucceeded(result)
-                    onSuccess()
+                    onSuccess(result)
                 }
 
                 override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
@@ -64,6 +65,31 @@ object BiometricHelper {
             }
         )
 
-        biometricPrompt.authenticate(promptInfo)
+        if (cryptoObject != null) {
+            biometricPrompt.authenticate(promptInfo, cryptoObject)
+        } else {
+            biometricPrompt.authenticate(promptInfo)
+        }
+    }
+
+    fun showBiometricPrompt(
+        activity: FragmentActivity,
+        title: String = "Unlock with Biometrics",
+        subtitle: String = "Touch the fingerprint sensor or use face unlock",
+        negativeButtonText: String = "Use Password",
+        onSuccess: () -> Unit,
+        onFallbackToPassword: () -> Unit,
+        onError: (String) -> Unit
+    ) {
+        showBiometricPrompt(
+            activity = activity,
+            title = title,
+            subtitle = subtitle,
+            negativeButtonText = negativeButtonText,
+            cryptoObject = null,
+            onSuccess = { _ -> onSuccess() },
+            onFallbackToPassword = onFallbackToPassword,
+            onError = onError
+        )
     }
 }

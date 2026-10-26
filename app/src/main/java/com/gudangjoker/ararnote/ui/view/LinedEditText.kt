@@ -43,15 +43,16 @@ class LinedEditText @JvmOverloads constructor(
         val r = lineRect
         val paint = linePaint
         val currentLineHeight = lineHeight
+        val lineOffset = (4f * resources.displayMetrics.density)
 
         // Draw ruled lines for existing text lines
         for (i in 0 until count) {
             val baseline = getLineBounds(i, r)
             canvas.drawLine(
                 r.left.toFloat(),
-                (baseline + 8).toFloat(),
+                baseline + lineOffset,
                 r.right.toFloat(),
-                (baseline + 8).toFloat(),
+                baseline + lineOffset,
                 paint
             )
         }
@@ -62,9 +63,9 @@ class LinedEditText @JvmOverloads constructor(
         while (nextBaseline < bottomMargin) {
             canvas.drawLine(
                 r.left.toFloat(),
-                (nextBaseline + 8).toFloat(),
+                nextBaseline + lineOffset,
                 r.right.toFloat(),
-                (nextBaseline + 8).toFloat(),
+                nextBaseline + lineOffset,
                 paint
             )
             nextBaseline += currentLineHeight

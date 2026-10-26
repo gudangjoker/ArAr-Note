@@ -140,15 +140,25 @@ class SettingsActivity : AppCompatActivity() {
             .setPositiveButton(R.string.action_done) { _, _ ->
                 val entered = editPassword.text.toString()
                 if (passwordManager.verifyPassword(entered)) {
+                    val cryptoObject = passwordManager.getBiometricEncryptCryptoObject()
                     BiometricHelper.showBiometricPrompt(
                         activity = this,
                         title = "Confirm Biometric Unlock",
                         subtitle = "Touch sensor to link biometric with Master Password",
                         negativeButtonText = getString(R.string.action_cancel),
-                        onSuccess = {
-                            passwordManager.setBiometricEnabled(true, entered)
-                            updateBiometricStatus()
-                            Toast.makeText(this, "Biometric unlock enabled successfully", Toast.LENGTH_SHORT).show()
+                        cryptoObject = cryptoObject,
+                        onSuccess = { result ->
+                            val success = if (result.cryptoObject?.cipher != null) {
+                                passwordManager.saveBiometricPasswordWithCipher(result.cryptoObject!!.cipher!!, entered)
+                            } else {
+                                passwordManager.setBiometricEnabled(true, entered)
+                            }
+                            if (success) {
+                                updateBiometricStatus()
+                                Toast.makeText(this, "Biometric unlock enabled successfully", Toast.LENGTH_SHORT).show()
+                            } else {
+                                Toast.makeText(this, "Failed to enable biometric unlock", Toast.LENGTH_SHORT).show()
+                            }
                         },
                         onFallbackToPassword = {},
                         onError = { err ->

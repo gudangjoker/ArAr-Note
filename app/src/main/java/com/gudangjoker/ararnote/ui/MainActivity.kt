@@ -138,13 +138,15 @@ class MainActivity : AppCompatActivity() {
     private fun onNoteClicked(note: NoteEntity) {
         if (note.encrypted == 1) {
             if (passwordManager.isBiometricEnabled() && BiometricHelper.isBiometricAvailable(this)) {
+                val cryptoObject = passwordManager.getBiometricDecryptCryptoObject()
                 BiometricHelper.showBiometricPrompt(
                     activity = this,
                     title = "Unlock " + (note.title.ifBlank { "Note" }),
                     subtitle = "Verify fingerprint or face to open note",
                     negativeButtonText = getString(R.string.hint_password),
-                    onSuccess = {
-                        val pwd = passwordManager.getBiometricPassword()
+                    cryptoObject = cryptoObject,
+                    onSuccess = { result ->
+                        val pwd = passwordManager.decryptBiometricPassword(result.cryptoObject?.cipher)
                         if (pwd != null) {
                             openNoteEditor(note, pwd)
                         } else {
@@ -236,13 +238,15 @@ class MainActivity : AppCompatActivity() {
     private fun handleExportNote(note: NoteEntity) {
         if (note.encrypted == 1) {
             if (passwordManager.isBiometricEnabled() && BiometricHelper.isBiometricAvailable(this)) {
+                val cryptoObject = passwordManager.getBiometricDecryptCryptoObject()
                 BiometricHelper.showBiometricPrompt(
                     activity = this,
                     title = "Unlock to Export",
                     subtitle = "Verify identity to export encrypted note",
                     negativeButtonText = getString(R.string.hint_password),
-                    onSuccess = {
-                        val pwd = passwordManager.getBiometricPassword()
+                    cryptoObject = cryptoObject,
+                    onSuccess = { result ->
+                        val pwd = passwordManager.decryptBiometricPassword(result.cryptoObject?.cipher)
                         if (pwd != null) {
                             exportWithPassword(note, pwd)
                         } else {

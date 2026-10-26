@@ -14,6 +14,7 @@ import android.widget.EditText
 import android.widget.GridLayout
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -73,6 +74,12 @@ class ChecklistNoteActivity : AppCompatActivity() {
 
         currentNoteId = intent.getLongExtra("extra_note_id", 0L)
         activePassword = intent.getStringExtra("extra_password")
+
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                saveNote { finish() }
+            }
+        })
 
         setupChecklist()
 

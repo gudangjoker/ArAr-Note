@@ -73,6 +73,8 @@ class ChecklistAdapter(
             // Remove previous text watcher to prevent recursion
             textWatcher?.let { editText.removeTextChangedListener(it) }
 
+            // Detach previous listener before updating state to avoid recycled listener triggers
+            checkBox.setOnCheckedChangeListener(null)
             checkBox.isChecked = item.checked
             editText.setText(item.text)
             updateStrikeThrough(item.checked)
