@@ -22,6 +22,11 @@
         android:title="@string/action_share"
         app:showAsAction="never" />
     <item
+        android:id="@+id/action_export"
+        android:icon="@drawable/ic_export"
+        android:title="@string/action_export"
+        app:showAsAction="never" />
+    <item
         android:id="@+id/action_archive"
         android:icon="@drawable/ic_archive"
         android:title="@string/action_archive"

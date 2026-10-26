@@ -21,6 +21,7 @@
     <string name="action_restore">Restore</string>
     <string name="action_delete_permanent">Delete Permanently</string>
     <string name="action_share">Share</string>
+    <string name="action_export">Export Note</string>
     <string name="action_search">Search</string>
     <string name="action_sort">Sort</string>
     <string name="action_view_mode">View Mode</string>
@@ -84,4 +85,17 @@
     <string name="pref_app_version">Version 1.0.0 (ArAr Note)</string>
 
     <string name="widget_select_note">Select a note to pin as Sticky Widget</string>
+
+    <!-- Export -->
+    <string name="export_title">Export Note</string>
+    <string name="export_pdf">PDF Document (.pdf)</string>
+    <string name="export_pdf_desc">Formatted document with headers and styling</string>
+    <string name="export_markdown">Markdown (.md)</string>
+    <string name="export_markdown_desc">Plain text with markdown headers and checklists</string>
+    <string name="export_txt">Plain Text (.txt)</string>
+    <string name="export_txt_desc">Simple raw text file</string>
+    <string name="export_share">Share File</string>
+    <string name="export_save">Save to Downloads</string>
+    <string name="export_success">Saved to Downloads: %s</string>
+    <string name="export_failed">Failed to export note</string>
 </resources>

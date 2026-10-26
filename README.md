@@ -38,7 +38,14 @@
    - Untuk catatan teks, menampilkan sticky note dengan tema warna dan cuplikan teks rapi.
    - Tombol cepat di header widget untuk membuka editor catatan langsung.
 
-7. **Manajemen Organisasi Lengkap:**
+7. **Ekspor Catatan ke PDF, Markdown (.md), dan Plain Text (.txt) (`ExportManager`):**
+   - **PDF Document (.pdf):** Dokumen A4 berstandar cetak dengan tata letak rapi, bilah warna aksen tema catatan, watermark header & footer dengan nomor halaman otomatis, pembungkusan teks multi-halaman (*automatic pagination*), serta kotak centang checklist grafis.
+   - **Markdown (.md):** File Markdown standar dengan `# Judul`, blok metadata tanggal, pemisah `---`, dan format to-do list GitHub Flavored Markdown (`- [x]` / `- [ ]`).
+   - **Plain Text (.txt):** File teks murni berformat rapi dengan ASCII divider dan penanda `[x]` / `[ ]`.
+   - **Aksi Cepat:** Simpan langsung ke folder `Downloads/ArArNote` perangkat (didukung MediaStore Android 10–14+) atau Bagikan (*Share Sheet*) via `FileProvider` ke WhatsApp, Gmail, Telegram, Google Drive, dll.
+   - **Akses Fleksibel:** Tersedia di toolbar editor catatan dan menu tekan lama (*long-press*) kartu catatan di beranda (dengan proteksi biometrik/password otomatis jika catatan terenkripsi).
+
+8. **Manajemen Organisasi Lengkap:**
    - **Tampilan Grid & List:** Beralih antara tampilan kartu grid 2 kolom atau daftar ringkas.
    - **Sorting:** Urutkan berdasarkan Tanggal Modifikasi, Tanggal Dibuat, Judul (A-Z), Warna, atau Waktu Pengingat.
    - **Pin to Top:** Sematkan catatan penting di posisi teratas.
@@ -46,7 +53,7 @@
    - **Archive:** Arsipkan catatan tanpa menghapusnya.
    - **Trash & Empty Trash:** Keranjang sampah dengan opsi pulihkan (*restore*) atau hapus permanen.
 
-8. **Backup & Restore Lokal (`.backup`):**
+9. **Backup & Restore Lokal (`.backup`):**
    - Ekspor seluruh basis data catatan ke file cadangan berkas `.backup` di memori internal aplikasi.
    - Pulihkan (*restore*) catatan dari file `.backup`.
    - Fitur bagikan (*Share*) catatan via teks biasa.

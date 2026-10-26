@@ -29,6 +29,7 @@ import com.gudangjoker.ararnote.data.NoteColor
 import com.gudangjoker.ararnote.data.NoteEntity
 import com.gudangjoker.ararnote.data.NoteType
 import com.gudangjoker.ararnote.databinding.ActivityChecklistNoteBinding
+import com.gudangjoker.ararnote.export.ExportManager
 import com.gudangjoker.ararnote.reminder.ReminderScheduler
 import com.gudangjoker.ararnote.security.CryptoManager
 import com.gudangjoker.ararnote.security.PasswordManager
@@ -396,6 +397,23 @@ class ChecklistNoteActivity : AppCompatActivity() {
                     putExtra(Intent.EXTRA_TEXT, formattedText)
                 }
                 startActivity(Intent.createChooser(shareIntent, getString(R.string.action_share)))
+                true
+            }
+            R.id.action_export -> {
+                val title = binding.editTitle.text.toString()
+                val checklistItems = adapter.getItems()
+                val created = currentNote?.createdDate ?: System.currentTimeMillis()
+                val modified = System.currentTimeMillis()
+                ExportManager.showExportBottomSheet(
+                    context = this,
+                    title = title,
+                    body = "",
+                    isChecklist = true,
+                    checklistItems = checklistItems,
+                    createdDate = created,
+                    modifiedDate = modified,
+                    colorIndex = currentColorIndex
+                )
                 true
             }
             R.id.action_archive -> {

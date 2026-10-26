@@ -24,11 +24,14 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.gudangjoker.ararnote.ArArNoteApp
 import com.gudangjoker.ararnote.R
+import com.gudangjoker.ararnote.data.ChecklistItem
 import com.gudangjoker.ararnote.data.NoteColor
 import com.gudangjoker.ararnote.data.NoteEntity
 import com.gudangjoker.ararnote.data.NoteType
 import com.gudangjoker.ararnote.databinding.ActivityMainBinding
+import com.gudangjoker.ararnote.export.ExportManager
 import com.gudangjoker.ararnote.security.BiometricHelper
+import com.gudangjoker.ararnote.security.CryptoManager
 import com.gudangjoker.ararnote.security.PasswordManager
 import com.gudangjoker.ararnote.ui.adapter.NoteListAdapter
 import com.gudangjoker.ararnote.ui.viewmodel.NoteViewModel
@@ -201,6 +204,7 @@ class MainActivity : AppCompatActivity() {
     private fun showNoteOptionsDialog(note: NoteEntity) {
         val options = arrayOf(
             if (note.importance == 1) "Unpin Note" else "Pin to Top",
+            getString(R.string.action_export),
             getString(R.string.action_archive),
             getString(R.string.action_delete)
         )
@@ -214,16 +218,91 @@ class MainActivity : AppCompatActivity() {
                         viewModel.saveNote(note.copy(importance = newImportance, modifiedDate = System.currentTimeMillis()))
                     }
                     1 -> {
+                        handleExportNote(note)
+                    }
+                    2 -> {
                         viewModel.moveToArchive(note)
                         Toast.makeText(this, R.string.msg_note_archived, Toast.LENGTH_SHORT).show()
                     }
-                    2 -> {
+                    3 -> {
                         viewModel.moveToTrash(note)
                         Toast.makeText(this, R.string.msg_note_deleted, Toast.LENGTH_SHORT).show()
                     }
                 }
             }
             .show()
+    }
+
+    private fun handleExportNote(note: NoteEntity) {
+        if (note.encrypted == 1) {
+            if (passwordManager.isBiometricEnabled() && BiometricHelper.isBiometricAvailable(this)) {
+                BiometricHelper.showBiometricPrompt(
+                    activity = this,
+                    title = "Unlock to Export",
+                    subtitle = "Verify identity to export encrypted note",
+                    negativeButtonText = getString(R.string.hint_password),
+                    onSuccess = {
+                        val pwd = passwordManager.getBiometricPassword()
+                        if (pwd != null) {
+                            exportWithPassword(note, pwd)
+                        } else {
+                            promptPasswordForExport(note)
+                        }
+                    },
+                    onFallbackToPassword = { promptPasswordForExport(note) },
+                    onError = { promptPasswordForExport(note) }
+                )
+            } else {
+                promptPasswordForExport(note)
+            }
+        } else {
+            proceedExport(note, note.note)
+        }
+    }
+
+    private fun promptPasswordForExport(note: NoteEntity) {
+        val view = layoutInflater.inflate(R.layout.dialog_password, null)
+        val editPassword = view.findViewById<EditText>(R.id.edit_password)
+
+        AlertDialog.Builder(this)
+            .setTitle("Unlock to Export")
+            .setView(view)
+            .setPositiveButton(R.string.action_done) { _, _ ->
+                val enteredPassword = editPassword.text.toString()
+                if (passwordManager.verifyPassword(enteredPassword)) {
+                    exportWithPassword(note, enteredPassword)
+                } else {
+                    Toast.makeText(this, R.string.msg_wrong_password, Toast.LENGTH_SHORT).show()
+                }
+            }
+            .setNegativeButton(R.string.action_cancel, null)
+            .show()
+    }
+
+    private fun exportWithPassword(note: NoteEntity, password: String) {
+        try {
+            val decrypted = CryptoManager.decrypt(note.note, password.toCharArray())
+            proceedExport(note, decrypted)
+        } catch (e: Exception) {
+            Toast.makeText(this, "Failed to decrypt note for export", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun proceedExport(note: NoteEntity, content: String) {
+        val isChecklist = note.type == NoteType.CHECKLIST
+        val checklistItems = if (isChecklist) ChecklistItem.fromJson(content) else emptyList()
+        val body = if (isChecklist) "" else content
+
+        ExportManager.showExportBottomSheet(
+            context = this,
+            title = note.title,
+            body = body,
+            isChecklist = isChecklist,
+            checklistItems = checklistItems,
+            createdDate = note.createdDate,
+            modifiedDate = note.modifiedDate,
+            colorIndex = note.colorIndex
+        )
     }
 
     private fun setupColorFilterChips() {
