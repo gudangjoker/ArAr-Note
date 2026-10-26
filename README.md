@@ -31,10 +31,12 @@
    - Notifikasi pengingat dengan tombol aksi langsung: **Snooze (15 menit)** dan **Done**.
    - `BootReceiver` otomatis memulihkan seluruh jadwal alarm setelah perangkat di-restart.
 
-6. **Home Screen Sticky Widget (`NoteWidgetProvider`):**
-   - Widget sticky note di home screen dengan warna latar sesuai tema catatan.
-   - Pratinjau judul dan isi teks/checklist secara langsung.
-   - Konfigurasi widget (`NoteWidgetConfigureActivity`) saat menambahkan ke layar utama.
+6. **Interactive Home Screen Sticky Widget (`NoteWidgetProvider` & `ChecklistWidgetService`):**
+   - **Interaktif Langsung dari Home Screen:** Centang dan batalkan centang item to-do checklist langsung dari layar depan HP tanpa perlu membuka aplikasi!
+   - Didukung `RemoteViewsService` + `RemoteViewsFactory` dengan pembaruan otomatis instan ke database SQLite.
+   - Menampilkan badge progres checklist (contoh: `✓ 3/5`) di baris judul widget.
+   - Untuk catatan teks, menampilkan sticky note dengan tema warna dan cuplikan teks rapi.
+   - Tombol cepat di header widget untuk membuka editor catatan langsung.
 
 7. **Manajemen Organisasi Lengkap:**
    - **Tampilan Grid & List:** Beralih antara tampilan kartu grid 2 kolom atau daftar ringkas.

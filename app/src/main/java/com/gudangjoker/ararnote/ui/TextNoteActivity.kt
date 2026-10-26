@@ -300,6 +300,7 @@ class TextNoteActivity : AppCompatActivity() {
             if (reminderTimestamp > System.currentTimeMillis()) {
                 ReminderScheduler.scheduleReminder(this, currentNote!!)
             }
+            com.gudangjoker.ararnote.widget.NoteWidgetProvider.notifyWidgets(this)
             onComplete()
         }
     }
