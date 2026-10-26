@@ -331,11 +331,11 @@ class SettingsActivity : AppCompatActivity() {
             .show()
     }
 
-    private fun performRestoreFromUri(uri: Uri) {
+    private fun performRestoreFromUri(uri: Uri, passwordCandidate: String? = null) {
         lifecycleScope.launch {
             try {
                 val count = contentResolver.openInputStream(uri)?.use { inputStream ->
-                    backupManager.restoreBackup(inputStream)
+                    backupManager.restoreBackup(inputStream, passwordCandidate)
                 } ?: 0
                 NoteWidgetProvider.notifyWidgets(this@SettingsActivity)
                 Toast.makeText(
@@ -343,10 +343,33 @@ class SettingsActivity : AppCompatActivity() {
                     getString(R.string.msg_restore_count, count),
                     Toast.LENGTH_LONG
                 ).show()
+            } catch (e: IllegalArgumentException) {
+                if (e.message?.contains("Password required") == true) {
+                    promptPasswordForColorNoteRestore(uri)
+                } else {
+                    Toast.makeText(this@SettingsActivity, e.message ?: getString(R.string.msg_restore_failed), Toast.LENGTH_SHORT).show()
+                }
             } catch (e: Exception) {
                 Toast.makeText(this@SettingsActivity, R.string.msg_restore_failed, Toast.LENGTH_SHORT).show()
             }
         }
+    }
+
+    private fun promptPasswordForColorNoteRestore(uri: Uri) {
+        val view = layoutInflater.inflate(R.layout.dialog_password, null)
+        val editPassword = view.findViewById<EditText>(R.id.edit_password)
+        editPassword.hint = "ColorNote backup password"
+
+        AlertDialog.Builder(this)
+            .setTitle("Encrypted Backup")
+            .setMessage("This ColorNote backup file is protected with a custom password. Please enter the password to restore:")
+            .setView(view)
+            .setPositiveButton(R.string.action_done) { _, _ ->
+                val entered = editPassword.text.toString()
+                performRestoreFromUri(uri, entered)
+            }
+            .setNegativeButton(R.string.action_cancel, null)
+            .show()
     }
 
     private fun showInternalRestoreSelectionDialog() {
@@ -367,20 +390,43 @@ class SettingsActivity : AppCompatActivity() {
             .show()
     }
 
-    private fun restoreFromFile(file: File) {
+    private fun restoreFromFile(file: File, passwordCandidate: String? = null) {
         lifecycleScope.launch {
             try {
-                val count = backupManager.restoreBackup(file)
+                val count = backupManager.restoreBackup(file, passwordCandidate)
                 NoteWidgetProvider.notifyWidgets(this@SettingsActivity)
                 Toast.makeText(
                     this@SettingsActivity,
                     getString(R.string.msg_restore_count, count),
                     Toast.LENGTH_SHORT
                 ).show()
+            } catch (e: IllegalArgumentException) {
+                if (e.message?.contains("Password required") == true) {
+                    promptPasswordForColorNoteFileRestore(file)
+                } else {
+                    Toast.makeText(this@SettingsActivity, e.message ?: getString(R.string.msg_restore_failed), Toast.LENGTH_SHORT).show()
+                }
             } catch (e: Exception) {
                 Toast.makeText(this@SettingsActivity, R.string.msg_restore_failed, Toast.LENGTH_SHORT).show()
             }
         }
+    }
+
+    private fun promptPasswordForColorNoteFileRestore(file: File) {
+        val view = layoutInflater.inflate(R.layout.dialog_password, null)
+        val editPassword = view.findViewById<EditText>(R.id.edit_password)
+        editPassword.hint = "ColorNote backup password"
+
+        AlertDialog.Builder(this)
+            .setTitle("Encrypted Backup")
+            .setMessage("This ColorNote backup file is protected with a custom password. Please enter the password to restore:")
+            .setView(view)
+            .setPositiveButton(R.string.action_done) { _, _ ->
+                val entered = editPassword.text.toString()
+                restoreFromFile(file, entered)
+            }
+            .setNegativeButton(R.string.action_cancel, null)
+            .show()
     }
 
     override fun onSupportNavigateUp(): Boolean {

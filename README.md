@@ -54,6 +54,7 @@
    - **Trash & Empty Trash:** Keranjang sampah dengan opsi pulihkan (*restore*) atau hapus permanen.
 
 9. **Backup & Restore ke Google Drive, Cloud & Penyimpanan Lokal (`.backup`):**
+   - **Kompatibel 100% dengan File Backup ColorNote Resmi (`colornote-*.backup`, `.dat`):** Mampu mendeteksi dan mendekripsi berkas cadangan biner resmi dari aplikasi ColorNote asli (menggunakan cipher `PBEWITHMD5AND128BITAES-CBC-OPENSSL` dengan password default `0000` maupun password kustom). Seluruh catatan dan to-do list dari ColorNote dapat langsung dipulihkan ke ArAr Note tanpa kehilangan data.
    - **Dukungan Google Drive (Storage Access Framework - SAF):** Simpan berkas cadangan database `.backup` langsung ke akun Google Drive pribadi, OneDrive, SD Card, atau folder perangkat tanpa perlu konfigurasi API key yang rumit.
    - **Pemulihan Langsung dari Google Drive:** Jelajahi dan pilih berkas cadangan langsung dari Google Drive untuk memulihkan seluruh catatan secara instan.
    - **Cadangan Internal Aplikasi:** Tetap menyediakan opsi simpan dan pulihkan cadangan cepat di penyimpanan internal aplikasi.

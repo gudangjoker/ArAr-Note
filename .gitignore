@@ -11,4 +11,6 @@
 /app/schemas
 *.hprof
 *.apk
+*.backup
+*.dat
 logo ArAr Note.jpg.zip

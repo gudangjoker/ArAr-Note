@@ -83,45 +83,79 @@ class BackupManager(private val context: Context) {
         return backupFile
     }
 
-    suspend fun restoreBackup(inputStream: InputStream): Int {
-        val content = inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
-        val rootObj = JSONObject(content)
-        val notesArray = rootObj.getJSONArray("notes")
-        val restoredNotes = mutableListOf<NoteEntity>()
+    suspend fun restoreBackup(inputStream: InputStream, passwordCandidate: String? = null): Int {
+        val bytes = inputStream.readBytes()
 
-        for (i in 0 until notesArray.length()) {
-            val obj = notesArray.getJSONObject(i)
-            val note = NoteEntity(
-                id = obj.optLong("_id", 0L),
-                activeState = obj.optInt("active_state", 0),
-                accountId = obj.optInt("account_id", 0),
-                folderId = obj.optInt("folder_id", 0),
-                status = obj.optInt("status", 0),
-                space = obj.optInt("space", 0),
-                type = obj.optInt("type", 0),
-                title = obj.optString("title", ""),
-                note = obj.optString("note", ""),
-                noteExt = obj.optString("note_ext", ""),
-                noteType = obj.optInt("note_type", 0),
-                tags = obj.optString("tags", ""),
-                importance = obj.optInt("importance", 0),
-                createdDate = obj.optLong("created_date", System.currentTimeMillis()),
-                modifiedDate = obj.optLong("modified_date", System.currentTimeMillis()),
-                reminderType = obj.optInt("reminder_type", 0),
-                reminderDate = obj.optLong("reminder_date", 0L),
-                reminderRepeat = obj.optInt("reminder_repeat", 0),
-                colorIndex = obj.optInt("color_index", 0),
-                encrypted = obj.optInt("encrypted", 0),
-                uuid = obj.optString("uuid", java.util.UUID.randomUUID().toString())
-            )
-            restoredNotes.add(note)
+        val restoredNotes: List<NoteEntity> = if (ColorNoteBackupParser.isColorNoteBackup(bytes)) {
+            // It's a native ColorNote encrypted binary backup file!
+            var notes: List<NoteEntity>? = null
+
+            // 1. Try provided password candidate if user entered one
+            if (!passwordCandidate.isNullOrBlank()) {
+                try {
+                    notes = ColorNoteBackupParser.parseColorNoteBackup(bytes, passwordCandidate)
+                } catch (e: Exception) {
+                    // Try next
+                }
+            }
+
+            // 2. Try default ColorNote backup password "0000"
+            if (notes == null) {
+                try {
+                    notes = ColorNoteBackupParser.parseColorNoteBackup(bytes, "0000")
+                } catch (e: Exception) {
+                    // Try next
+                }
+            }
+
+            if (notes == null) {
+                throw IllegalArgumentException("Password required for ColorNote backup file")
+            }
+            notes
+        } else {
+            // It's an ArAr Note JSON backup file!
+            val content = String(bytes, Charsets.UTF_8)
+            val rootObj = JSONObject(content)
+            val notesArray = rootObj.getJSONArray("notes")
+            val list = mutableListOf<NoteEntity>()
+
+            for (i in 0 until notesArray.length()) {
+                val obj = notesArray.getJSONObject(i)
+                val note = NoteEntity(
+                    id = 0L, // Auto-generate new ID to avoid collisions with existing notes
+                    activeState = obj.optInt("active_state", 0),
+                    accountId = obj.optInt("account_id", 0),
+                    folderId = obj.optInt("folder_id", 0),
+                    status = obj.optInt("status", 0),
+                    space = obj.optInt("space", 0),
+                    type = obj.optInt("type", 0),
+                    title = obj.optString("title", ""),
+                    note = obj.optString("note", ""),
+                    noteExt = obj.optString("note_ext", ""),
+                    noteType = obj.optInt("note_type", 0),
+                    tags = obj.optString("tags", ""),
+                    importance = obj.optInt("importance", 0),
+                    createdDate = obj.optLong("created_date", System.currentTimeMillis()),
+                    modifiedDate = obj.optLong("modified_date", System.currentTimeMillis()),
+                    reminderType = obj.optInt("reminder_type", 0),
+                    reminderDate = obj.optLong("reminder_date", 0L),
+                    reminderRepeat = obj.optInt("reminder_repeat", 0),
+                    colorIndex = obj.optInt("color_index", 0),
+                    encrypted = obj.optInt("encrypted", 0),
+                    uuid = obj.optString("uuid", java.util.UUID.randomUUID().toString())
+                )
+                list.add(note)
+            }
+            list
         }
 
-        db.noteDao().insertAll(restoredNotes)
+        if (restoredNotes.isNotEmpty()) {
+            db.noteDao().insertAll(restoredNotes)
+        }
         return restoredNotes.size
     }
 
-    suspend fun restoreBackup(file: File): Int {
-        return FileInputStream(file).use { restoreBackup(it) }
+    suspend fun restoreBackup(file: File, passwordCandidate: String? = null): Int {
+        return FileInputStream(file).use { restoreBackup(it, passwordCandidate) }
     }
 }
