@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="primary">#1976D2</color>
+    <color name="primary_dark">#0D47A1</color>
+    <color name="accent">#FFAB00</color>
+    <color name="background">#F5F5F5</color>
+    <color name="surface">#FFFFFF</color>
+    <color name="text_primary">#212121</color>
+    <color name="text_secondary">#757575</color>
+    <color name="text_hint">#9E9E9E</color>
+    <color name="divider">#BDBDBD</color>
+    <color name="ruled_line">#25000000</color>
+    <color name="ic_launcher_background">#FCF9F2</color>
+
+    <!-- 9 Classic ColorNote Note Theme Colors -->
+    <!-- 0: Yellow -->
+    <color name="note_yellow_bg">#FFF9C4</color>
+    <color name="note_yellow_header">#FBC02D</color>
+    <color name="note_yellow_text">#37474F</color>
+
+    <!-- 1: Blue -->
+    <color name="note_blue_bg">#BBDEFB</color>
+    <color name="note_blue_header">#1976D2</color>
+    <color name="note_blue_text">#0D47A1</color>
+
+    <!-- 2: Red -->
+    <color name="note_red_bg">#FFCDD2</color>
+    <color name="note_red_header">#D32F2F</color>
+    <color name="note_red_text">#B71C1C</color>
+
+    <!-- 3: Orange -->
+    <color name="note_orange_bg">#FFE0B2</color>
+    <color name="note_orange_header">#F57C00</color>
+    <color name="note_orange_text">#E65100</color>
+
+    <!-- 4: Green -->
+    <color name="note_green_bg">#C8E6C9</color>
+    <color name="note_green_header">#388E3C</color>
+    <color name="note_green_text">#1B5E20</color>
+
+    <!-- 5: Purple -->
+    <color name="note_purple_bg">#E1BEE7</color>
+    <color name="note_purple_header">#7B1FA2</color>
+    <color name="note_purple_text">#4A148C</color>
+
+    <!-- 6: Cyan -->
+    <color name="note_cyan_bg">#B2EBF2</color>
+    <color name="note_cyan_header">#0097A7</color>
+    <color name="note_cyan_text">#006064</color>
+
+    <!-- 7: Gray -->
+    <color name="note_gray_bg">#CFD8DC</color>
+    <color name="note_gray_header">#546E7A</color>
+    <color name="note_gray_text">#263238</color>
+
+    <!-- 8: Dark / Black -->
+    <color name="note_dark_bg">#37474F</color>
+    <color name="note_dark_header">#212121</color>
+    <color name="note_dark_text">#ECEFF1</color>
+</resources>

@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/layout_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/note_yellow_bg"
+    android:orientation="vertical">
+
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/note_yellow_header"
+        android:theme="@style/Widget.ArArNote.Toolbar"
+        app:navigationIcon="@drawable/ic_arrow_back"
+        app:popupTheme="@style/ThemeOverlay.MaterialComponents.Light" />
+
+    <!-- Title Input -->
+    <EditText
+        android:id="@+id/edit_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@null"
+        android:hint="@string/hint_title"
+        android:inputType="textCapSentences"
+        android:maxLines="2"
+        android:paddingStart="16dp"
+        android:paddingTop="12dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="8dp"
+        android:textColor="@color/note_yellow_text"
+        android:textColorHint="#90A4AE"
+        android:textSize="18sp"
+        android:textStyle="bold" />
+
+    <!-- Thin Divider -->
+    <View
+        android:id="@+id/divider_line"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#20000000" />
+
+    <!-- Iconic Lined Notepad Ruled Paper -->
+    <com.gudangjoker.ararnote.ui.view.LinedEditText
+        android:id="@+id/edit_body"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@null"
+        android:gravity="top|start"
+        android:hint="@string/hint_note"
+        android:inputType="textMultiLine|textCapSentences"
+        android:lineSpacingExtra="6dp"
+        android:paddingStart="16dp"
+        android:paddingTop="12dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="16dp"
+        android:textColor="@color/note_yellow_text"
+        android:textColorHint="#90A4AE"
+        android:textSize="16sp" />
+
+</LinearLayout>

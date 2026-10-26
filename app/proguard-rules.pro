@@ -1,0 +1,2 @@
+-keep class com.gudangjoker.ararnote.data.** { *; }
+-keepclassmembers class * extends androidx.room.RoomDatabase { *; }
