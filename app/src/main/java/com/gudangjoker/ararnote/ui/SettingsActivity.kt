@@ -374,7 +374,9 @@ class SettingsActivity : AppCompatActivity() {
 
     private fun showInternalRestoreSelectionDialog() {
         val backupDir = File(getExternalFilesDir(null), "backup")
-        val files = backupDir.listFiles { _, name -> name.endsWith(".backup") }
+        val files = backupDir.listFiles { file ->
+            file.isFile && !file.name.startsWith(".")
+        }
 
         if (files.isNullOrEmpty()) {
             Toast.makeText(this, "No backup files found in internal storage", Toast.LENGTH_SHORT).show()
