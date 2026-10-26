@@ -29,10 +29,17 @@ jobs:
           cache: 'gradle'
 
       - name: Grant execute permission for gradlew
-        run: chmod +x gradlew || true
+        run: chmod +x gradlew
 
-      - name: Build Debug & Release APK
-        run: ./gradlew assembleDebug assembleRelease --stacktrace
+      - name: Verify Gradle Wrapper
+        run: |
+          ./gradlew --version
+
+      - name: Build Release APK
+        run: ./gradlew assembleRelease --stacktrace
+
+      - name: Build Debug APK
+        run: ./gradlew assembleDebug --stacktrace
 
       - name: Stage APKs for Distribution
         run: |
@@ -45,14 +52,14 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ArArNote-v1.0.0-release-apk
-          path: app/build/outputs/apk/release/*.apk
+          path: release_assets/ArArNote-v1.0.0-release.apk
           if-no-files-found: warn
 
       - name: Upload Debug APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: ArArNote-v1.0.0-debug-apk
-          path: app/build/outputs/apk/debug/*.apk
+          path: release_assets/ArArNote-v1.0.0-debug.apk
           if-no-files-found: warn
 
       - name: Create GitHub Release
