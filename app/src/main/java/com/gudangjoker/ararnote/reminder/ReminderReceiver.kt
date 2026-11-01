@@ -122,7 +122,7 @@ class ReminderReceiver : BroadcastReceiver() {
                         ReminderScheduler.scheduleReminder(context, updated)
                     }
                 }
-            } catch (_: Exception) {
+            } catch (e: Exception) {
             } finally {
                 pendingResult.finish()
             }

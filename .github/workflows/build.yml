@@ -36,23 +36,16 @@ jobs:
           ./gradlew --version
 
       - name: Build Release APK
-        run: |
-          ./gradlew assembleRelease --stacktrace 2>&1 | tee gradle_release.log
-
-      - name: Report Error on Failure
-        if: failure()
-        run: |
-          echo "=== GRADLE FAILURE LOG ==="
-          grep -E "(e: |error:|FAILURE:|What went wrong:|Caused by:)" -B 2 -A 8 gradle_release.log || tail -n 80 gradle_release.log
+        run: ./gradlew assembleRelease --stacktrace --no-daemon
 
       - name: Stage APKs for Distribution
         run: |
           mkdir -p release_assets
-          TAG_NAME="${GITHUB_REF_NAME:-v1.0.1}"
-          cp app/build/outputs/apk/release/*.apk "release_assets/ArArNote-${TAG_NAME}-release.apk" || true
-          cp app/build/outputs/apk/debug/*.apk "release_assets/ArArNote-${TAG_NAME}-debug.apk" || true
-          cp app/build/outputs/apk/release/*.apk release_assets/ArArNote-release.apk || true
-          cp app/build/outputs/apk/debug/*.apk release_assets/ArArNote-debug.apk || true
+          echo "=== Locating Built APKs ==="
+          find app/build/outputs/ -type f -name "*.apk"
+          TAG_NAME="${GITHUB_REF_NAME:-v1.0.3}"
+          cp app/build/outputs/apk/release/*.apk "release_assets/ArArNote-${TAG_NAME}-release.apk"
+          cp app/build/outputs/apk/release/*.apk release_assets/ArArNote-release.apk
           ls -la release_assets/
 
       - name: Upload Release APK Artifact
@@ -60,24 +53,16 @@ jobs:
         with:
           name: ArArNote-release-apk
           path: release_assets/*release.apk
-          if-no-files-found: warn
-
-      - name: Upload Debug APK Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ArArNote-debug-apk
-          path: release_assets/*debug.apk
-          if-no-files-found: warn
+          if-no-files-found: error
 
       - name: Create GitHub Release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
-        continue-on-error: true
         with:
           name: "ArAr Note ${{ github.ref_name }}"
           generate_release_notes: true
           draft: false
           prerelease: false
-          fail_on_unmatched_files: false
+          fail_on_unmatched_files: true
           files: |
             release_assets/*.apk

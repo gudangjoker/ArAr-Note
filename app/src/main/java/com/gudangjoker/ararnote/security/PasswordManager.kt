@@ -150,7 +150,7 @@ class PasswordManager(private val context: Context) {
                 val cipher = Cipher.getInstance(KEYSTORE_TRANSFORMATION)
                 cipher.init(Cipher.ENCRYPT_MODE, secretKey)
                 BiometricPrompt.CryptoObject(cipher)
-            } catch (_: Exception) {
+            } catch (e: Exception) {
                 null
             }
         } catch (e: Exception) {
@@ -261,7 +261,7 @@ class PasswordManager(private val context: Context) {
             if (keyStore.containsAlias(KEY_ALIAS)) {
                 keyStore.deleteEntry(KEY_ALIAS)
             }
-        } catch (_: Exception) {}
+        } catch (e: Exception) {}
     }
 
     private fun hashSha256(password: String, salt: ByteArray): ByteArray {

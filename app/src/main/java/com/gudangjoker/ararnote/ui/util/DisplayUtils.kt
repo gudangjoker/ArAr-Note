@@ -28,7 +28,7 @@ object DisplayUtils {
                     layoutParams.preferredDisplayModeId = bestHighFpsMode.modeId
                     activity.window.attributes = layoutParams
                 }
-            } catch (_: Exception) {
+            } catch (e: Exception) {
                 // Graceful fallback if device vendor blocks programmatic display mode changes
             }
         }
@@ -43,7 +43,7 @@ object DisplayUtils {
                 HapticFeedbackConstants.CLOCK_TICK,
                 HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING
             )
-        } catch (_: Exception) {}
+        } catch (e: Exception) {}
     }
 
     fun performHapticFeedback(activity: Activity) {
@@ -52,7 +52,7 @@ object DisplayUtils {
                 HapticFeedbackConstants.CLOCK_TICK,
                 HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING
             )
-        } catch (_: Exception) {}
+        } catch (e: Exception) {}
     }
 
     fun performHapticFeedback(view: View) {

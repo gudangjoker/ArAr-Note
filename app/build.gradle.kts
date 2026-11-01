@@ -36,12 +36,7 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = false
-            val keystoreFile = file("keystore/ararnote-release.jks")
-            if (keystoreFile.exists()) {
-                signingConfig = signingConfigs.getByName("release")
-            } else {
-                signingConfig = signingConfigs.getByName("debug")
-            }
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

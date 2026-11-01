@@ -33,7 +33,7 @@ object ReminderScheduler {
                     } else {
                         "${items.size} items completed"
                     }
-                } catch (_: Exception) {
+                } catch (e: Exception) {
                     "Checklist reminder"
                 }
             }
