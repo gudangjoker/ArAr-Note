@@ -57,7 +57,7 @@ jobs:
           mkdir -p release_assets
           echo "=== Locating Built APKs ==="
           find app/build/outputs/ -type f -name "*.apk"
-          TAG_NAME="${GITHUB_REF_NAME:-v1.0.3}"
+          TAG_NAME="${GITHUB_REF_NAME:-v1.0.4}"
           cp app/build/outputs/apk/release/*.apk "release_assets/ArArNote-${TAG_NAME}-release.apk"
           cp app/build/outputs/apk/release/*.apk release_assets/ArArNote-release.apk
           ls -la release_assets/
