@@ -44,22 +44,25 @@ jobs:
       - name: Stage APKs for Distribution
         run: |
           mkdir -p release_assets
-          cp app/build/outputs/apk/release/*.apk release_assets/ArArNote-v1.0.0-release.apk || true
-          cp app/build/outputs/apk/debug/*.apk release_assets/ArArNote-v1.0.0-debug.apk || true
+          TAG_NAME="${GITHUB_REF_NAME:-v1.0.1}"
+          cp app/build/outputs/apk/release/*.apk "release_assets/ArArNote-${TAG_NAME}-release.apk" || true
+          cp app/build/outputs/apk/debug/*.apk "release_assets/ArArNote-${TAG_NAME}-debug.apk" || true
+          cp app/build/outputs/apk/release/*.apk release_assets/ArArNote-release.apk || true
+          cp app/build/outputs/apk/debug/*.apk release_assets/ArArNote-debug.apk || true
           ls -la release_assets/
 
       - name: Upload Release APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ArArNote-v1.0.0-release-apk
-          path: release_assets/ArArNote-v1.0.0-release.apk
+          name: ArArNote-release-apk
+          path: release_assets/*release.apk
           if-no-files-found: warn
 
       - name: Upload Debug APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ArArNote-v1.0.0-debug-apk
-          path: release_assets/ArArNote-v1.0.0-debug.apk
+          name: ArArNote-debug-apk
+          path: release_assets/*debug.apk
           if-no-files-found: warn
 
       - name: Create GitHub Release
@@ -73,5 +76,4 @@ jobs:
           prerelease: false
           fail_on_unmatched_files: false
           files: |
-            release_assets/ArArNote-v1.0.0-release.apk
-            release_assets/ArArNote-v1.0.0-debug.apk
+            release_assets/*.apk
