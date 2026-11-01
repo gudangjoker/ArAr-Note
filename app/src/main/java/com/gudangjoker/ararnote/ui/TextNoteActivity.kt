@@ -172,7 +172,7 @@ class TextNoteActivity : AppCompatActivity() {
                 binding.editTitle.requestFocus()
             } else {
                 binding.editBody.requestFocus()
-                binding.editBody.setSelection(binding.editBody.text.length)
+                binding.editBody.setSelection(binding.editBody.text?.length ?: 0)
             }
 
             val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
