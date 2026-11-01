@@ -12,6 +12,7 @@
         android:background="?attr/colorPrimary"
         android:theme="@style/ThemeOverlay.ArArNote.Toolbar"
         app:popupTheme="@style/ThemeOverlay.ArArNote.PopupMenu"
+        app:titleTextAppearance="@style/TextAppearance.ArArNote.Toolbar.Title"
         app:navigationIcon="@drawable/ic_arrow_back" />
 
     <FrameLayout
