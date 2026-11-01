@@ -36,7 +36,15 @@ jobs:
           ./gradlew --version
 
       - name: Build Release APK
-        run: ./gradlew assembleRelease --stacktrace
+        run: |
+          ./gradlew assembleRelease --stacktrace > gradle_release.log 2>&1 || {
+            echo "### Gradle Build Failure Log" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            tail -n 120 gradle_release.log >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            tail -n 120 gradle_release.log
+            exit 1
+          }
 
       - name: Build Debug APK
         run: ./gradlew assembleDebug --stacktrace
