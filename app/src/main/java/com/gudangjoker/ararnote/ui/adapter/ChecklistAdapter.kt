@@ -4,6 +4,7 @@ import android.graphics.Paint
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.CheckBox
@@ -12,10 +13,12 @@ import android.widget.ImageView
 import androidx.recyclerview.widget.RecyclerView
 import com.gudangjoker.ararnote.R
 import com.gudangjoker.ararnote.data.ChecklistItem
+import java.util.Collections
 
 class ChecklistAdapter(
     private val items: MutableList<ChecklistItem>,
-    private val onItemChanged: () -> Unit
+    private val onItemChanged: () -> Unit,
+    var onStartDrag: ((RecyclerView.ViewHolder) -> Unit)? = null
 ) : RecyclerView.Adapter<ChecklistAdapter.ChecklistViewHolder>() {
 
     fun getItems(): List<ChecklistItem> = items
@@ -23,6 +26,20 @@ class ChecklistAdapter(
     fun addItem(text: String = "") {
         items.add(ChecklistItem(text = text, checked = false))
         notifyItemInserted(items.size - 1)
+        onItemChanged()
+    }
+
+    fun moveItem(fromPosition: Int, toPosition: Int) {
+        if (fromPosition < toPosition) {
+            for (i in fromPosition until toPosition) {
+                Collections.swap(items, i, i + 1)
+            }
+        } else {
+            for (i in fromPosition downTo toPosition + 1) {
+                Collections.swap(items, i, i - 1)
+            }
+        }
+        notifyItemMoved(fromPosition, toPosition)
         onItemChanged()
     }
 
@@ -63,6 +80,7 @@ class ChecklistAdapter(
     override fun getItemCount(): Int = items.size
 
     inner class ChecklistViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        private val btnDrag: ImageView = itemView.findViewById(R.id.btn_drag)
         private val checkBox: CheckBox = itemView.findViewById(R.id.checkbox_item)
         private val editText: EditText = itemView.findViewById(R.id.edit_item_text)
         private val btnDelete: ImageView = itemView.findViewById(R.id.btn_delete_item)
@@ -70,6 +88,14 @@ class ChecklistAdapter(
         private var textWatcher: TextWatcher? = null
 
         fun bind(item: ChecklistItem) {
+            // Drag handle listener
+            btnDrag.setOnTouchListener { _, event ->
+                if (event.actionMasked == MotionEvent.ACTION_DOWN) {
+                    onStartDrag?.invoke(this)
+                }
+                false
+            }
+
             // Remove previous text watcher to prevent recursion
             textWatcher?.let { editText.removeTextChangedListener(it) }
 

@@ -20,7 +20,9 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.gudangjoker.ararnote.ArArNoteApp
 import com.gudangjoker.ararnote.R
@@ -101,11 +103,38 @@ class ChecklistNoteActivity : AppCompatActivity() {
     }
 
     private fun setupChecklist() {
-        adapter = ChecklistAdapter(items) {
+        adapter = ChecklistAdapter(items, {
             // Callback when an item changes
-        }
+        })
         binding.recyclerChecklist.layoutManager = LinearLayoutManager(this)
         binding.recyclerChecklist.adapter = adapter
+
+        val touchHelperCallback = object : ItemTouchHelper.SimpleCallback(
+            ItemTouchHelper.UP or ItemTouchHelper.DOWN, 0
+        ) {
+            override fun onMove(
+                recyclerView: RecyclerView,
+                viewHolder: RecyclerView.ViewHolder,
+                target: RecyclerView.ViewHolder
+            ): Boolean {
+                val fromPos = viewHolder.bindingAdapterPosition
+                val toPos = target.bindingAdapterPosition
+                if (fromPos != RecyclerView.NO_POSITION && toPos != RecyclerView.NO_POSITION) {
+                    adapter.moveItem(fromPos, toPos)
+                    return true
+                }
+                return false
+            }
+
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {}
+            override fun isLongPressDragEnabled(): Boolean = true
+        }
+
+        val itemTouchHelper = ItemTouchHelper(touchHelperCallback)
+        itemTouchHelper.attachToRecyclerView(binding.recyclerChecklist)
+        adapter.onStartDrag = { viewHolder ->
+            itemTouchHelper.startDrag(viewHolder)
+        }
 
         binding.btnAddItem.setOnClickListener {
             addNewItemFromInput()

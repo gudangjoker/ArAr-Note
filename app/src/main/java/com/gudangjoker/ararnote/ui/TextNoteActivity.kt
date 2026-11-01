@@ -2,12 +2,19 @@ package com.gudangjoker.ararnote.ui
 
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
+import android.content.Context
 import android.content.Intent
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
+import android.text.method.ArrowKeyMovementMethod
+import android.text.method.LinkMovementMethod
+import android.text.util.Linkify
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.EditText
 import android.widget.GridLayout
@@ -37,6 +44,7 @@ import com.gudangjoker.ararnote.ui.viewmodel.NoteViewModel
 import com.gudangjoker.ararnote.ui.viewmodel.NoteViewModelFactory
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
+import java.util.ArrayDeque
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
@@ -57,6 +65,16 @@ class TextNoteActivity : AppCompatActivity() {
     private var activePassword: String? = null
     private var reminderTimestamp: Long = 0L
 
+    // Read Mode vs Edit Mode
+    private var isEditMode: Boolean = true
+
+    // Undo / Redo Stacks
+    private data class TextSnapshot(val title: String, val body: String)
+    private val undoStack = ArrayDeque<TextSnapshot>()
+    private val redoStack = ArrayDeque<TextSnapshot>()
+    private var isUndoOrRedoAction = false
+    private var textWatcherActive = true
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         DisplayUtils.optimizeWindowForHighRefreshRate(this)
@@ -76,16 +94,184 @@ class TextNoteActivity : AppCompatActivity() {
             reminderTimestamp = presetReminder
         }
 
+        setupTextWatchersForUndo()
+
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                saveNote { finish() }
+                handleBackAction()
             }
         })
 
-        if (currentNoteId != 0L) {
+        // Check for Intent.ACTION_SEND (Sharing text to ArAr Note)
+        if (intent?.action == Intent.ACTION_SEND && intent.type?.startsWith("text/") == true) {
+            handleIncomingShareIntent(intent)
+        } else if (currentNoteId != 0L) {
+            // Existing note: start in Read Mode
+            isEditMode = false
             loadExistingNote()
         } else {
+            // New note: start in Edit Mode
+            isEditMode = true
             applyThemeColor(NoteColor.YELLOW)
+            setEditMode(true)
+        }
+    }
+
+    private fun handleIncomingShareIntent(intent: Intent) {
+        val extraSubject = intent.getStringExtra(Intent.EXTRA_SUBJECT)
+        val extraText = intent.getStringExtra(Intent.EXTRA_TEXT) ?: ""
+
+        currentNoteId = 0L
+        applyThemeColor(NoteColor.YELLOW)
+
+        if (!extraSubject.isNullOrBlank()) {
+            binding.editTitle.setText(extraSubject)
+            binding.editBody.setText(extraText)
+        } else {
+            val lines = extraText.trim().split("\n")
+            if (lines.isNotEmpty() && lines[0].length <= 50) {
+                binding.editTitle.setText(lines[0])
+                binding.editBody.setText(lines.drop(1).joinToString("\n").trim())
+            } else {
+                binding.editBody.setText(extraText)
+            }
+        }
+
+        isEditMode = true
+        setEditMode(true)
+        Toast.makeText(this, "Shared to ArAr Note", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun handleBackAction() {
+        if (isEditMode && currentNoteId != 0L) {
+            // Save and toggle back to Read Mode
+            saveNote {
+                setEditMode(false)
+            }
+        } else {
+            // Save and finish activity
+            saveNote { finish() }
+        }
+    }
+
+    private fun setEditMode(enable: Boolean) {
+        isEditMode = enable
+        if (enable) {
+            // EDIT MODE
+            binding.editTitle.isFocusable = true
+            binding.editTitle.isFocusableInTouchMode = true
+            binding.editTitle.isCursorVisible = true
+
+            binding.editBody.isFocusable = true
+            binding.editBody.isFocusableInTouchMode = true
+            binding.editBody.isCursorVisible = true
+            binding.editBody.movementMethod = ArrowKeyMovementMethod.getInstance()
+            binding.editBody.setOnClickListener(null)
+
+            if (binding.editTitle.text.isNullOrBlank()) {
+                binding.editTitle.requestFocus()
+            } else {
+                binding.editBody.requestFocus()
+                binding.editBody.setSelection(binding.editBody.text.length)
+            }
+
+            val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+            imm?.showSoftInput(if (binding.editTitle.isFocused) binding.editTitle else binding.editBody, InputMethodManager.SHOW_IMPLICIT)
+        } else {
+            // READ / VIEW MODE with active Linkify
+            val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+            imm?.hideSoftInputFromWindow(binding.root.windowToken, 0)
+
+            binding.editTitle.isFocusable = false
+            binding.editTitle.isFocusableInTouchMode = false
+            binding.editTitle.isCursorVisible = false
+
+            binding.editBody.isFocusable = false
+            binding.editBody.isFocusableInTouchMode = false
+            binding.editBody.isCursorVisible = false
+            binding.editBody.movementMethod = LinkMovementMethod.getInstance()
+
+            // Apply clickable links
+            Linkify.addLinks(binding.editBody, Linkify.ALL)
+
+            // Tapping on body outside links enables Edit Mode
+            binding.editBody.setOnClickListener {
+                setEditMode(true)
+            }
+        }
+        invalidateOptionsMenu()
+    }
+
+    private fun setupTextWatchersForUndo() {
+        val watcher = object : TextWatcher {
+            private var beforeSnapshot: TextSnapshot? = null
+
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+                if (!isUndoOrRedoAction && textWatcherActive && isEditMode) {
+                    beforeSnapshot = TextSnapshot(
+                        title = binding.editTitle.text.toString(),
+                        body = binding.editBody.text.toString()
+                    )
+                }
+            }
+
+            override fun onTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+            override fun afterTextChanged(s: Editable?) {
+                if (!isUndoOrRedoAction && textWatcherActive && isEditMode) {
+                    beforeSnapshot?.let { prev ->
+                        val current = TextSnapshot(
+                            title = binding.editTitle.text.toString(),
+                            body = binding.editBody.text.toString()
+                        )
+                        if (prev != current) {
+                            undoStack.push(prev)
+                            if (undoStack.size > 50) undoStack.removeLast()
+                            redoStack.clear()
+                            invalidateOptionsMenu()
+                        }
+                    }
+                }
+            }
+        }
+
+        binding.editTitle.addTextChangedListener(watcher)
+        binding.editBody.addTextChangedListener(watcher)
+    }
+
+    private fun performUndo() {
+        if (undoStack.isNotEmpty()) {
+            val currentState = TextSnapshot(
+                title = binding.editTitle.text.toString(),
+                body = binding.editBody.text.toString()
+            )
+            redoStack.push(currentState)
+
+            val prevState = undoStack.pop()
+            isUndoOrRedoAction = true
+            binding.editTitle.setText(prevState.title)
+            binding.editBody.setText(prevState.body)
+            binding.editBody.setSelection(prevState.body.length)
+            isUndoOrRedoAction = false
+            invalidateOptionsMenu()
+        }
+    }
+
+    private fun performRedo() {
+        if (redoStack.isNotEmpty()) {
+            val currentState = TextSnapshot(
+                title = binding.editTitle.text.toString(),
+                body = binding.editBody.text.toString()
+            )
+            undoStack.push(currentState)
+
+            val nextState = redoStack.pop()
+            isUndoOrRedoAction = true
+            binding.editTitle.setText(nextState.title)
+            binding.editBody.setText(nextState.body)
+            binding.editBody.setSelection(nextState.body.length)
+            isUndoOrRedoAction = false
+            invalidateOptionsMenu()
         }
     }
 
@@ -100,6 +286,7 @@ class TextNoteActivity : AppCompatActivity() {
 
                 applyThemeColor(NoteColor.fromIndex(currentColorIndex))
 
+                textWatcherActive = false
                 if (isEncrypted) {
                     if (activePassword != null) {
                         applyDecryptedContent(note, activePassword!!)
@@ -110,7 +297,9 @@ class TextNoteActivity : AppCompatActivity() {
                 } else {
                     binding.editTitle.setText(note.title)
                     binding.editBody.setText(note.note)
+                    setEditMode(false)
                 }
+                textWatcherActive = true
 
                 invalidateOptionsMenu()
             }
@@ -168,9 +357,12 @@ class TextNoteActivity : AppCompatActivity() {
     private fun applyDecryptedContent(note: NoteEntity, password: String) {
         activePassword = password
         try {
+            textWatcherActive = false
             binding.editTitle.setText(note.title)
             val decryptedBody = CryptoManager.decrypt(note.note, password.toCharArray())
             binding.editBody.setText(decryptedBody)
+            textWatcherActive = true
+            setEditMode(false)
             invalidateOptionsMenu()
         } catch (e: Exception) {
             Toast.makeText(this, "Failed to decrypt note content", Toast.LENGTH_SHORT).show()
@@ -283,13 +475,11 @@ class TextNoteActivity : AppCompatActivity() {
         }
 
         if (isEncrypted) {
-            // Unlock note
             isEncrypted = false
             activePassword = null
             invalidateOptionsMenu()
             Toast.makeText(this, R.string.action_unlock, Toast.LENGTH_SHORT).show()
         } else {
-            // Lock note
             promptPasswordForLock()
         }
     }
@@ -344,7 +534,6 @@ class TextNoteActivity : AppCompatActivity() {
 
     private fun saveNote(onComplete: () -> Unit = {}) {
         if (isEncrypted && activePassword == null) {
-            // Defensive: Never save an unauthenticated encrypted note
             onComplete()
             return
         }
@@ -394,15 +583,58 @@ class TextNoteActivity : AppCompatActivity() {
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.note_editor_menu, menu)
-        val lockItem = menu.findItem(R.id.action_lock)
-        lockItem.setIcon(if (isEncrypted) R.drawable.ic_lock else R.drawable.ic_lock_open)
         return true
+    }
+
+    override fun onPrepareOptionsMenu(menu: Menu): Boolean {
+        val itemDone = menu.findItem(R.id.action_done)
+        val itemEdit = menu.findItem(R.id.action_edit)
+        val itemUndo = menu.findItem(R.id.action_undo)
+        val itemRedo = menu.findItem(R.id.action_redo)
+        val itemLock = menu.findItem(R.id.action_lock)
+
+        if (isEditMode) {
+            itemDone?.isVisible = true
+            itemEdit?.isVisible = false
+            itemUndo?.isVisible = true
+            itemRedo?.isVisible = true
+            itemUndo?.isEnabled = undoStack.isNotEmpty()
+            itemRedo?.isEnabled = redoStack.isNotEmpty()
+        } else {
+            itemDone?.isVisible = false
+            itemEdit?.isVisible = true
+            itemUndo?.isVisible = false
+            itemRedo?.isVisible = false
+        }
+
+        itemLock?.setIcon(if (isEncrypted) R.drawable.ic_lock else R.drawable.ic_lock_open)
+        itemLock?.setTitle(if (isEncrypted) R.string.action_unlock else R.string.action_lock)
+
+        return super.onPrepareOptionsMenu(menu)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             android.R.id.home -> {
-                saveNote { finish() }
+                handleBackAction()
+                true
+            }
+            R.id.action_done -> {
+                saveNote {
+                    setEditMode(false)
+                }
+                true
+            }
+            R.id.action_edit -> {
+                setEditMode(true)
+                true
+            }
+            R.id.action_undo -> {
+                performUndo()
+                true
+            }
+            R.id.action_redo -> {
+                performRedo()
                 true
             }
             R.id.action_color -> {

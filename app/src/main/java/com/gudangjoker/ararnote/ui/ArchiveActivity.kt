@@ -2,6 +2,7 @@ package com.gudangjoker.ararnote.ui
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.MenuItem
 import android.view.View
 import android.widget.EditText
 import android.widget.Toast
@@ -46,6 +47,7 @@ class ArchiveActivity : AppCompatActivity() {
         setSupportActionBar(binding.toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.title = getString(R.string.title_archive)
+        binding.toolbar.setNavigationOnClickListener { finish() }
 
         adapter = NoteListAdapter(
             isGrid = false,
@@ -62,6 +64,14 @@ class ArchiveActivity : AppCompatActivity() {
                 binding.textEmptyArchive.visibility = if (notes.isEmpty()) View.VISIBLE else View.GONE
             }
         }
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if (item.itemId == android.R.id.home) {
+            finish()
+            return true
+        }
+        return super.onOptionsItemSelected(item)
     }
 
     private fun openNote(note: NoteEntity) {

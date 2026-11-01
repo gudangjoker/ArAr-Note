@@ -1,6 +1,7 @@
 package com.gudangjoker.ararnote.ui
 
 import android.os.Bundle
+import android.view.MenuItem
 import android.view.View
 import android.widget.Toast
 import androidx.activity.viewModels
@@ -38,6 +39,7 @@ class TrashActivity : AppCompatActivity() {
         setSupportActionBar(binding.toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.title = getString(R.string.title_trash)
+        binding.toolbar.setNavigationOnClickListener { finish() }
 
         adapter = NoteListAdapter(
             isGrid = false,
@@ -60,6 +62,14 @@ class TrashActivity : AppCompatActivity() {
                 binding.btnEmptyTrash.visibility = if (isEmpty) View.GONE else View.VISIBLE
             }
         }
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if (item.itemId == android.R.id.home) {
+            finish()
+            return true
+        }
+        return super.onOptionsItemSelected(item)
     }
 
     private fun showTrashOptions(note: NoteEntity) {

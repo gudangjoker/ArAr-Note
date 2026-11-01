@@ -3,6 +3,7 @@ package com.gudangjoker.ararnote.ui
 import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
+import android.view.MenuItem
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
@@ -48,6 +49,7 @@ class SearchActivity : AppCompatActivity() {
         setSupportActionBar(binding.toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.setDisplayShowTitleEnabled(false)
+        binding.toolbar.setNavigationOnClickListener { finish() }
 
         adapter = NoteListAdapter(
             isGrid = false,
@@ -88,6 +90,14 @@ class SearchActivity : AppCompatActivity() {
                 binding.textEmptySearch.visibility = if (notes.isEmpty()) View.VISIBLE else View.GONE
             }
         }
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if (item.itemId == android.R.id.home) {
+            finish()
+            return true
+        }
+        return super.onOptionsItemSelected(item)
     }
 
     private fun onNoteClicked(note: NoteEntity) {
