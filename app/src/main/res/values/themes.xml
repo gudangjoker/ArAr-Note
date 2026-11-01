@@ -6,11 +6,45 @@
         <item name="colorSecondary">@color/accent</item>
         <item name="colorSecondaryVariant">@color/accent</item>
         <item name="colorOnSecondary">#000000</item>
+        <item name="colorSurface">#FFFFFF</item>
+        <item name="colorOnSurface">@color/text_primary</item>
         <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
         <item name="android:windowBackground">@color/background</item>
+
+        <!-- Modern Clean Popup / Overflow Menu -->
+        <item name="popupMenuStyle">@style/Widget.ArArNote.PopupMenu</item>
+        <item name="android:popupMenuStyle">@style/Widget.ArArNote.PopupMenu</item>
+        <item name="actionOverflowMenuStyle">@style/Widget.ArArNote.PopupMenu</item>
+        <item name="android:actionOverflowMenuStyle">@style/Widget.ArArNote.PopupMenu</item>
     </style>
 
-    <style name="Widget.ArArNote.Toolbar" parent="Widget.MaterialComponents.Toolbar.Primary">
+    <!-- Toolbar Overlay: White text/icons, transparent background for child views -->
+    <style name="ThemeOverlay.ArArNote.Toolbar" parent="ThemeOverlay.MaterialComponents.Dark.ActionBar">
+        <item name="android:textColorPrimary">#FFFFFF</item>
+        <item name="titleTextColor">#FFFFFF</item>
+        <item name="subtitleTextColor">#E0E0E0</item>
+        <item name="colorControlNormal">#FFFFFF</item>
+        <item name="android:colorControlNormal">#FFFFFF</item>
+        <item name="android:background">@null</item>
+    </style>
+
+    <!-- Popup Menu Overlay: Clean white card with dark text -->
+    <style name="ThemeOverlay.ArArNote.PopupMenu" parent="ThemeOverlay.MaterialComponents.Light">
+        <item name="android:colorBackground">#FFFFFF</item>
+        <item name="colorSurface">#FFFFFF</item>
+        <item name="colorOnSurface">#212121</item>
+        <item name="android:textColor">#212121</item>
+        <item name="android:textColorPrimary">#212121</item>
+        <item name="android:popupBackground">@drawable/bg_popup_menu</item>
+    </style>
+
+    <!-- Popup Menu Widget Style -->
+    <style name="Widget.ArArNote.PopupMenu" parent="Widget.MaterialComponents.PopupMenu">
+        <item name="android:popupBackground">@drawable/bg_popup_menu</item>
+        <item name="android:textColor">#212121</item>
+    </style>
+
+    <style name="Widget.ArArNote.Toolbar" parent="Widget.MaterialComponents.Toolbar.Surface">
         <item name="titleTextColor">#FFFFFF</item>
         <item name="subtitleTextColor">#E0E0E0</item>
     </style>

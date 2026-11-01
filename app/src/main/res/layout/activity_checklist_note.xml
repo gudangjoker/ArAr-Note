@@ -12,9 +12,9 @@
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
         android:background="@color/note_yellow_header"
-        android:theme="@style/Widget.ArArNote.Toolbar"
+        android:theme="@style/ThemeOverlay.ArArNote.Toolbar"
         app:navigationIcon="@drawable/ic_arrow_back"
-        app:popupTheme="@style/ThemeOverlay.MaterialComponents.Light" />
+        app:popupTheme="@style/ThemeOverlay.ArArNote.PopupMenu" />
 
     <!-- Title Input -->
     <EditText
