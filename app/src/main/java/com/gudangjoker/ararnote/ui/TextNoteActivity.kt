@@ -29,6 +29,7 @@ import com.gudangjoker.ararnote.data.NoteType
 import com.gudangjoker.ararnote.databinding.ActivityTextNoteBinding
 import com.gudangjoker.ararnote.export.ExportManager
 import com.gudangjoker.ararnote.reminder.ReminderScheduler
+import com.gudangjoker.ararnote.security.BiometricHelper
 import com.gudangjoker.ararnote.security.CryptoManager
 import com.gudangjoker.ararnote.security.PasswordManager
 import com.gudangjoker.ararnote.ui.util.DisplayUtils
@@ -99,13 +100,12 @@ class TextNoteActivity : AppCompatActivity() {
 
                 applyThemeColor(NoteColor.fromIndex(currentColorIndex))
 
-                if (isEncrypted && activePassword != null) {
-                    try {
-                        binding.editTitle.setText(note.title)
-                        val decryptedBody = CryptoManager.decrypt(note.note, activePassword!!.toCharArray())
-                        binding.editBody.setText(decryptedBody)
-                    } catch (e: Exception) {
-                        Toast.makeText(this@TextNoteActivity, "Failed to decrypt note content", Toast.LENGTH_SHORT).show()
+                if (isEncrypted) {
+                    if (activePassword != null) {
+                        applyDecryptedContent(note, activePassword!!)
+                    } else {
+                        promptAuthenticationAndLoad(note)
+                        return@launch
                     }
                 } else {
                     binding.editTitle.setText(note.title)
@@ -114,6 +114,67 @@ class TextNoteActivity : AppCompatActivity() {
 
                 invalidateOptionsMenu()
             }
+        }
+    }
+
+    private fun promptAuthenticationAndLoad(note: NoteEntity) {
+        if (passwordManager.isBiometricEnabled() && BiometricHelper.isBiometricAvailable(this)) {
+            val cryptoObject = passwordManager.getBiometricDecryptCryptoObject()
+            BiometricHelper.showBiometricPrompt(
+                activity = this,
+                title = "Unlock " + (note.title.ifBlank { "Note" }),
+                subtitle = "Verify fingerprint or face to open note",
+                negativeButtonText = getString(R.string.hint_password),
+                cryptoObject = cryptoObject,
+                onSuccess = { result ->
+                    val pwd = passwordManager.decryptBiometricPassword(result.cryptoObject?.cipher)
+                    if (pwd != null) {
+                        applyDecryptedContent(note, pwd)
+                    } else {
+                        promptManualPasswordAndLoad(note)
+                    }
+                },
+                onFallbackToPassword = { promptManualPasswordAndLoad(note) },
+                onError = { promptManualPasswordAndLoad(note) }
+            )
+        } else {
+            promptManualPasswordAndLoad(note)
+        }
+    }
+
+    private fun promptManualPasswordAndLoad(note: NoteEntity) {
+        val view = layoutInflater.inflate(R.layout.dialog_password, null)
+        val editPassword = view.findViewById<EditText>(R.id.edit_password)
+
+        AlertDialog.Builder(this)
+            .setTitle(R.string.action_unlock)
+            .setView(view)
+            .setCancelable(false)
+            .setPositiveButton(R.string.action_done) { _, _ ->
+                val entered = editPassword.text.toString()
+                if (passwordManager.verifyPassword(entered)) {
+                    applyDecryptedContent(note, entered)
+                } else {
+                    Toast.makeText(this, R.string.msg_wrong_password, Toast.LENGTH_SHORT).show()
+                    finish()
+                }
+            }
+            .setNegativeButton(R.string.action_cancel) { _, _ ->
+                finish()
+            }
+            .show()
+    }
+
+    private fun applyDecryptedContent(note: NoteEntity, password: String) {
+        activePassword = password
+        try {
+            binding.editTitle.setText(note.title)
+            val decryptedBody = CryptoManager.decrypt(note.note, password.toCharArray())
+            binding.editBody.setText(decryptedBody)
+            invalidateOptionsMenu()
+        } catch (e: Exception) {
+            Toast.makeText(this, "Failed to decrypt note content", Toast.LENGTH_SHORT).show()
+            finish()
         }
     }
 
@@ -282,6 +343,12 @@ class TextNoteActivity : AppCompatActivity() {
     }
 
     private fun saveNote(onComplete: () -> Unit = {}) {
+        if (isEncrypted && activePassword == null) {
+            // Defensive: Never save an unauthenticated encrypted note
+            onComplete()
+            return
+        }
+
         val titleText = binding.editTitle.text.toString().trim()
         val rawBodyText = binding.editBody.text.toString()
 

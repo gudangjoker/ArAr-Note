@@ -121,6 +121,7 @@ class BackupManager(private val context: Context) {
 
             for (i in 0 until notesArray.length()) {
                 val obj = notesArray.getJSONObject(i)
+                val rawUuid = obj.optString("uuid", "").trim()
                 val note = NoteEntity(
                     id = 0L, // Auto-generate new ID to avoid collisions with existing notes
                     activeState = obj.optInt("active_state", 0),
@@ -142,7 +143,7 @@ class BackupManager(private val context: Context) {
                     reminderRepeat = obj.optInt("reminder_repeat", 0),
                     colorIndex = obj.optInt("color_index", 0),
                     encrypted = obj.optInt("encrypted", 0),
-                    uuid = obj.optString("uuid", java.util.UUID.randomUUID().toString())
+                    uuid = if (rawUuid.isNotEmpty()) rawUuid else java.util.UUID.randomUUID().toString()
                 )
                 list.add(note)
             }
@@ -150,7 +151,17 @@ class BackupManager(private val context: Context) {
         }
 
         if (restoredNotes.isNotEmpty()) {
-            db.noteDao().insertAll(restoredNotes)
+            val existingUuids = db.noteDao().getAllNotesForBackup().map { it.uuid }.toHashSet()
+            val seenBatchUuids = HashSet<String>()
+            val sanitizedNotes = restoredNotes.map { note ->
+                var finalUuid = note.uuid.trim()
+                if (finalUuid.isBlank() || existingUuids.contains(finalUuid) || seenBatchUuids.contains(finalUuid)) {
+                    finalUuid = java.util.UUID.randomUUID().toString()
+                }
+                seenBatchUuids.add(finalUuid)
+                note.copy(uuid = finalUuid)
+            }
+            db.noteDao().insertAll(sanitizedNotes)
         }
         return restoredNotes.size
     }

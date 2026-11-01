@@ -32,6 +32,7 @@ import com.gudangjoker.ararnote.data.NoteType
 import com.gudangjoker.ararnote.databinding.ActivityChecklistNoteBinding
 import com.gudangjoker.ararnote.export.ExportManager
 import com.gudangjoker.ararnote.reminder.ReminderScheduler
+import com.gudangjoker.ararnote.security.BiometricHelper
 import com.gudangjoker.ararnote.security.CryptoManager
 import com.gudangjoker.ararnote.security.PasswordManager
 import com.gudangjoker.ararnote.ui.adapter.ChecklistAdapter
@@ -146,30 +147,91 @@ class ChecklistNoteActivity : AppCompatActivity() {
 
                 applyThemeColor(NoteColor.fromIndex(currentColorIndex))
 
-                binding.editTitle.setText(note.title)
-
-                val rawJson = if (isEncrypted && activePassword != null) {
-                    try {
-                        CryptoManager.decrypt(note.note, activePassword!!.toCharArray())
-                    } catch (e: Exception) {
-                        Toast.makeText(this@ChecklistNoteActivity, "Failed to decrypt checklist", Toast.LENGTH_SHORT).show()
-                        ""
+                if (isEncrypted) {
+                    if (activePassword != null) {
+                        applyDecryptedContent(note, activePassword!!)
+                    } else {
+                        promptAuthenticationAndLoad(note)
+                        return@launch
                     }
                 } else {
-                    note.note
+                    applyChecklistContent(note.title, note.note)
                 }
-
-                val loaded = ChecklistItem.fromJson(rawJson)
-                items.clear()
-                items.addAll(loaded)
-                if (items.isEmpty()) {
-                    items.add(ChecklistItem(text = ""))
-                }
-                adapter.notifyDataSetChanged()
 
                 invalidateOptionsMenu()
             }
         }
+    }
+
+    private fun promptAuthenticationAndLoad(note: NoteEntity) {
+        if (passwordManager.isBiometricEnabled() && BiometricHelper.isBiometricAvailable(this)) {
+            val cryptoObject = passwordManager.getBiometricDecryptCryptoObject()
+            BiometricHelper.showBiometricPrompt(
+                activity = this,
+                title = "Unlock " + (note.title.ifBlank { "Checklist" }),
+                subtitle = "Verify fingerprint or face to open note",
+                negativeButtonText = getString(R.string.hint_password),
+                cryptoObject = cryptoObject,
+                onSuccess = { result ->
+                    val pwd = passwordManager.decryptBiometricPassword(result.cryptoObject?.cipher)
+                    if (pwd != null) {
+                        applyDecryptedContent(note, pwd)
+                    } else {
+                        promptManualPasswordAndLoad(note)
+                    }
+                },
+                onFallbackToPassword = { promptManualPasswordAndLoad(note) },
+                onError = { promptManualPasswordAndLoad(note) }
+            )
+        } else {
+            promptManualPasswordAndLoad(note)
+        }
+    }
+
+    private fun promptManualPasswordAndLoad(note: NoteEntity) {
+        val view = layoutInflater.inflate(R.layout.dialog_password, null)
+        val editPassword = view.findViewById<EditText>(R.id.edit_password)
+
+        AlertDialog.Builder(this)
+            .setTitle(R.string.action_unlock)
+            .setView(view)
+            .setCancelable(false)
+            .setPositiveButton(R.string.action_done) { _, _ ->
+                val entered = editPassword.text.toString()
+                if (passwordManager.verifyPassword(entered)) {
+                    applyDecryptedContent(note, entered)
+                } else {
+                    Toast.makeText(this, R.string.msg_wrong_password, Toast.LENGTH_SHORT).show()
+                    finish()
+                }
+            }
+            .setNegativeButton(R.string.action_cancel) { _, _ ->
+                finish()
+            }
+            .show()
+    }
+
+    private fun applyDecryptedContent(note: NoteEntity, password: String) {
+        activePassword = password
+        try {
+            val decryptedJson = CryptoManager.decrypt(note.note, password.toCharArray())
+            applyChecklistContent(note.title, decryptedJson)
+            invalidateOptionsMenu()
+        } catch (e: Exception) {
+            Toast.makeText(this, "Failed to decrypt checklist", Toast.LENGTH_SHORT).show()
+            finish()
+        }
+    }
+
+    private fun applyChecklistContent(title: String, rawJson: String) {
+        binding.editTitle.setText(title)
+        val loaded = ChecklistItem.fromJson(rawJson)
+        items.clear()
+        items.addAll(loaded)
+        if (items.isEmpty()) {
+            items.add(ChecklistItem(text = ""))
+        }
+        adapter.notifyDataSetChanged()
     }
 
     private fun applyThemeColor(color: NoteColor) {
@@ -334,6 +396,12 @@ class ChecklistNoteActivity : AppCompatActivity() {
     }
 
     private fun saveNote(onComplete: () -> Unit = {}) {
+        if (isEncrypted && activePassword == null) {
+            // Defensive: Never save an unauthenticated encrypted note
+            onComplete()
+            return
+        }
+
         val titleText = binding.editTitle.text.toString().trim()
         val nonBlankItems = adapter.getItems().filter { it.text.isNotBlank() }
 

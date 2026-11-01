@@ -70,15 +70,20 @@ class SearchActivity : AppCompatActivity() {
         binding.editSearch.requestFocus()
     }
 
+    private var searchJob: kotlinx.coroutines.Job? = null
+
     private fun performSearch(query: String) {
-        if (query.isBlank()) {
+        searchJob?.cancel()
+        val trimmed = query.trim()
+        if (trimmed.isBlank()) {
             adapter.submitList(emptyList())
             binding.textEmptySearch.visibility = View.GONE
             return
         }
 
-        lifecycleScope.launch {
-            viewModel.searchNotes(query).collectLatest { notes ->
+        searchJob = lifecycleScope.launch {
+            kotlinx.coroutines.delay(250) // 250ms debounce
+            viewModel.searchNotes(trimmed).collectLatest { notes ->
                 adapter.submitList(notes)
                 binding.textEmptySearch.visibility = if (notes.isEmpty()) View.VISIBLE else View.GONE
             }

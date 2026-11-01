@@ -28,6 +28,11 @@ class NoteWidgetProvider : AppWidgetProvider() {
         super.onReceive(context, intent)
 
         if (intent.action == ACTION_TOGGLE_CHECKLIST_ITEM) {
+            val token = intent.getStringExtra(EXTRA_SECURITY_TOKEN)
+            if (token != SECURITY_TOKEN) {
+                // Reject unauthorized external invocation
+                return
+            }
             val noteId = intent.getLongExtra(EXTRA_NOTE_ID, -1L)
             val itemIndex = intent.getIntExtra(EXTRA_ITEM_INDEX, -1)
 
@@ -136,6 +141,8 @@ class NoteWidgetProvider : AppWidgetProvider() {
                             // Pending intent template for item toggle clicks
                             val toggleIntent = Intent(context, NoteWidgetProvider::class.java).apply {
                                 action = ACTION_TOGGLE_CHECKLIST_ITEM
+                                setPackage(context.packageName)
+                                putExtra(EXTRA_SECURITY_TOKEN, SECURITY_TOKEN)
                             }
                             val togglePendingIntent = PendingIntent.getBroadcast(
                                 context,
@@ -200,6 +207,8 @@ class NoteWidgetProvider : AppWidgetProvider() {
         const val ACTION_TOGGLE_CHECKLIST_ITEM = "com.gudangjoker.ararnote.ACTION_TOGGLE_CHECKLIST_ITEM"
         const val EXTRA_NOTE_ID = "extra_note_id"
         const val EXTRA_ITEM_INDEX = "extra_item_index"
+        const val EXTRA_SECURITY_TOKEN = "extra_security_token"
+        val SECURITY_TOKEN: String = java.util.UUID.randomUUID().toString()
 
         fun notifyWidgets(context: Context) {
             val appWidgetManager = AppWidgetManager.getInstance(context)

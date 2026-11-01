@@ -104,6 +104,7 @@ object LegacyBackupParser {
                     val obj = JSONObject(jsonStr)
                     // Identify note objects by presence of standard note columns
                     if (obj.has("_id") || obj.has("created_date") || (obj.has("title") && obj.has("note"))) {
+                        val rawUuid = obj.optString("uuid", "").trim()
                         val note = NoteEntity(
                             id = 0L, // Auto-generate new primary key in Room to preserve all existing notes
                             activeState = obj.optInt("active_state", 0),
@@ -125,7 +126,7 @@ object LegacyBackupParser {
                             reminderRepeat = obj.optInt("reminder_repeat", 0),
                             colorIndex = obj.optInt("color_index", 0),
                             encrypted = obj.optInt("encrypted", 0),
-                            uuid = obj.optString("uuid", java.util.UUID.randomUUID().toString())
+                            uuid = if (rawUuid.isNotEmpty()) rawUuid else java.util.UUID.randomUUID().toString()
                         )
                         restoredNotes.add(note)
                     }

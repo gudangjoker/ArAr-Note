@@ -8,13 +8,15 @@ import androidx.fragment.app.FragmentActivity
 
 object BiometricHelper {
 
-    fun isBiometricAvailable(context: Context): Boolean {
+    fun isBiometricAvailable(context: Context, requireStrong: Boolean = true): Boolean {
         val biometricManager = BiometricManager.from(context)
-        val canAuthenticate = biometricManager.canAuthenticate(
+        val authenticators = if (requireStrong) {
+            BiometricManager.Authenticators.BIOMETRIC_STRONG
+        } else {
             BiometricManager.Authenticators.BIOMETRIC_STRONG or
             BiometricManager.Authenticators.BIOMETRIC_WEAK
-        )
-        return canAuthenticate == BiometricManager.BIOMETRIC_SUCCESS
+        }
+        return biometricManager.canAuthenticate(authenticators) == BiometricManager.BIOMETRIC_SUCCESS
     }
 
     fun showBiometricPrompt(
@@ -29,15 +31,22 @@ object BiometricHelper {
     ) {
         val executor = ContextCompat.getMainExecutor(activity)
 
-        val promptInfo = BiometricPrompt.PromptInfo.Builder()
+        val promptBuilder = BiometricPrompt.PromptInfo.Builder()
             .setTitle(title)
             .setSubtitle(subtitle)
             .setNegativeButtonText(negativeButtonText)
-            .setAllowedAuthenticators(
+
+        if (cryptoObject != null) {
+            // Android 11+ (API 30+) strictly requires BIOMETRIC_STRONG when using CryptoObject
+            promptBuilder.setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_STRONG)
+        } else {
+            promptBuilder.setAllowedAuthenticators(
                 BiometricManager.Authenticators.BIOMETRIC_STRONG or
                 BiometricManager.Authenticators.BIOMETRIC_WEAK
             )
-            .build()
+        }
+
+        val promptInfo = promptBuilder.build()
 
         val biometricPrompt = BiometricPrompt(
             activity,

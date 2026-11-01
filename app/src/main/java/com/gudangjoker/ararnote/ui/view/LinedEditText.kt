@@ -45,8 +45,12 @@ class LinedEditText @JvmOverloads constructor(
         val currentLineHeight = lineHeight
         val lineOffset = (4f * resources.displayMetrics.density)
 
-        // Draw ruled lines for existing text lines
-        for (i in 0 until count) {
+        val clip = canvas.clipBounds
+        val startLine = if (currentLineHeight > 0) kotlin.math.max(0, (clip.top - paddingTop) / currentLineHeight) else 0
+        val endLine = if (currentLineHeight > 0) kotlin.math.min(count, (clip.bottom - paddingTop) / currentLineHeight + 2) else count
+
+        // Draw ruled lines only for visible text lines (clipped viewport)
+        for (i in startLine until endLine) {
             val baseline = getLineBounds(i, r)
             canvas.drawLine(
                 r.left.toFloat(),
@@ -59,8 +63,12 @@ class LinedEditText @JvmOverloads constructor(
 
         // Draw continuing ruled lines all the way to the bottom of the page
         var nextBaseline = if (count > 0) getLineBounds(count - 1, r) + currentLineHeight else r.top + currentLineHeight
-        val bottomMargin = height - paddingBottom
-        while (nextBaseline < bottomMargin) {
+        val bottomBound = kotlin.math.max(height - paddingBottom, clip.bottom)
+        if (nextBaseline < clip.top && currentLineHeight > 0) {
+            val skipped = ((clip.top - nextBaseline) / currentLineHeight) * currentLineHeight
+            nextBaseline += skipped
+        }
+        while (nextBaseline <= bottomBound && nextBaseline <= clip.bottom + currentLineHeight) {
             canvas.drawLine(
                 r.left.toFloat(),
                 nextBaseline + lineOffset,

@@ -22,11 +22,29 @@ object ReminderScheduler {
         if (note.reminderDate <= System.currentTimeMillis()) return
 
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val previewText = when {
+            note.encrypted == 1 -> "Locked content"
+            note.type == com.gudangjoker.ararnote.data.NoteType.CHECKLIST -> {
+                try {
+                    val items = com.gudangjoker.ararnote.data.ChecklistItem.fromJson(note.note)
+                    val unchecked = items.filter { !it.checked }
+                    if (unchecked.isNotEmpty()) {
+                        unchecked.take(3).joinToString("\n") { "• " + it.text }
+                    } else {
+                        "${items.size} items completed"
+                    }
+                } catch (_: Exception) {
+                    "Checklist reminder"
+                }
+            }
+            else -> note.note.ifBlank { "Reminder" }
+        }
+
         val intent = Intent(context, ReminderReceiver::class.java).apply {
             action = ReminderReceiver.ACTION_REMINDER
             putExtra(EXTRA_NOTE_ID, note.id)
-            putExtra(EXTRA_NOTE_TITLE, if (note.encrypted == 1) "Encrypted Note" else note.title)
-            putExtra(EXTRA_NOTE_CONTENT, if (note.encrypted == 1) "Locked content" else note.note)
+            putExtra(EXTRA_NOTE_TITLE, if (note.encrypted == 1) "🔒 Encrypted Note" else note.title.ifBlank { "Note Reminder" })
+            putExtra(EXTRA_NOTE_CONTENT, previewText)
         }
 
         val pendingIntent = PendingIntent.getBroadcast(

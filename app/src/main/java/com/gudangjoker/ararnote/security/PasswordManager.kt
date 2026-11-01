@@ -143,6 +143,16 @@ class PasswordManager(private val context: Context) {
             val cipher = Cipher.getInstance(KEYSTORE_TRANSFORMATION)
             cipher.init(Cipher.ENCRYPT_MODE, secretKey)
             BiometricPrompt.CryptoObject(cipher)
+        } catch (e: android.security.keystore.KeyPermanentlyInvalidatedException) {
+            deleteKeystoreKey()
+            try {
+                val secretKey = getOrCreateKeystoreKey()
+                val cipher = Cipher.getInstance(KEYSTORE_TRANSFORMATION)
+                cipher.init(Cipher.ENCRYPT_MODE, secretKey)
+                BiometricPrompt.CryptoObject(cipher)
+            } catch (_: Exception) {
+                null
+            }
         } catch (e: Exception) {
             null
         }
