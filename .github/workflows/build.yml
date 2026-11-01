@@ -45,9 +45,6 @@ jobs:
           echo "=== GRADLE FAILURE LOG ==="
           grep -E "(e: |error:|FAILURE:|What went wrong:|Caused by:)" -B 2 -A 8 gradle_release.log || tail -n 80 gradle_release.log
 
-      - name: Build Debug APK
-        run: ./gradlew assembleDebug --stacktrace
-
       - name: Stage APKs for Distribution
         run: |
           mkdir -p release_assets
