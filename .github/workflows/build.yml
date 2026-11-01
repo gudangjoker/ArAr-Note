@@ -36,7 +36,21 @@ jobs:
           ./gradlew --version
 
       - name: Build Release APK
-        run: ./gradlew assembleRelease --stacktrace --no-daemon
+        run: |
+          ./gradlew assembleRelease --stacktrace --no-daemon > gradle_build.log 2>&1 || {
+            ERR=$(grep -m 1 -E "(e: |error:|FAILURE:|What went wrong:|Caused by:)" gradle_build.log | tr '\n' ' ')
+            echo "::error title=Gradle Build Error::$ERR"
+            tail -n 100 gradle_build.log
+            exit 1
+          }
+          cat gradle_build.log | tail -n 30
+
+      - name: Upload Build Log on Failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gradle-build-log
+          path: gradle_build.log
 
       - name: Stage APKs for Distribution
         run: |
