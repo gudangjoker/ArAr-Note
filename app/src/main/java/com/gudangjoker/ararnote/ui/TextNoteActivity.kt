@@ -594,17 +594,17 @@ class TextNoteActivity : AppCompatActivity() {
         val itemLock = menu.findItem(R.id.action_lock)
 
         if (isEditMode) {
-            itemDone?.isVisible = true
-            itemEdit?.isVisible = false
-            itemUndo?.isVisible = true
-            itemRedo?.isVisible = true
-            itemUndo?.isEnabled = undoStack.isNotEmpty()
-            itemRedo?.isEnabled = redoStack.isNotEmpty()
+            itemDone?.setVisible(true)
+            itemEdit?.setVisible(false)
+            itemUndo?.setVisible(true)
+            itemRedo?.setVisible(true)
+            itemUndo?.setEnabled(undoStack.isNotEmpty())
+            itemRedo?.setEnabled(redoStack.isNotEmpty())
         } else {
-            itemDone?.isVisible = false
-            itemEdit?.isVisible = true
-            itemUndo?.isVisible = false
-            itemRedo?.isVisible = false
+            itemDone?.setVisible(false)
+            itemEdit?.setVisible(true)
+            itemUndo?.setVisible(false)
+            itemRedo?.setVisible(false)
         }
 
         itemLock?.setIcon(if (isEncrypted) R.drawable.ic_lock else R.drawable.ic_lock_open)
