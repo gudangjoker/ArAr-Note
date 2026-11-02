@@ -14,7 +14,9 @@ import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -472,9 +474,11 @@ class MainActivity : AppCompatActivity() {
 
     private fun observeNotes() {
         lifecycleScope.launch {
-            viewModel.activeNotes.collectLatest { notes ->
-                adapter.submitList(notes)
-                binding.layoutEmptyState.visibility = if (notes.isEmpty()) View.VISIBLE else View.GONE
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.activeNotes.collectLatest { notes ->
+                    adapter.submitList(notes)
+                    binding.layoutEmptyState.visibility = if (notes.isEmpty()) View.VISIBLE else View.GONE
+                }
             }
         }
     }

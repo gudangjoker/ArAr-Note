@@ -7,7 +7,9 @@ import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.gudangjoker.ararnote.ArArNoteApp
 import com.gudangjoker.ararnote.R
@@ -55,11 +57,13 @@ class TrashActivity : AppCompatActivity() {
         }
 
         lifecycleScope.launch {
-            viewModel.trashNotes.collectLatest { notes ->
-                adapter.submitList(notes)
-                val isEmpty = notes.isEmpty()
-                binding.textEmptyTrash.visibility = if (isEmpty) View.VISIBLE else View.GONE
-                binding.btnEmptyTrash.visibility = if (isEmpty) View.GONE else View.VISIBLE
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.trashNotes.collectLatest { notes ->
+                    adapter.submitList(notes)
+                    val isEmpty = notes.isEmpty()
+                    binding.textEmptyTrash.visibility = if (isEmpty) View.VISIBLE else View.GONE
+                    binding.btnEmptyTrash.visibility = if (isEmpty) View.GONE else View.VISIBLE
+                }
             }
         }
     }

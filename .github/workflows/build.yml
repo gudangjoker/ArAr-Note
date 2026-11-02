@@ -35,7 +35,16 @@ jobs:
         run: |
           ./gradlew --version
 
+      - name: Run Automated Unit Tests
+        run: |
+          ./gradlew testReleaseUnitTest --stacktrace
+
       - name: Build Release APK
+        env:
+          KEYSTORE_FILE: ${{ secrets.KEYSTORE_FILE }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           ./gradlew assembleRelease --stacktrace --no-daemon > gradle_build.log 2>&1 || {
             ERR=$(grep -m 1 -E "(e: |error:|FAILURE:|What went wrong:|Caused by:)" gradle_build.log | tr '\n' ' ')
@@ -57,7 +66,7 @@ jobs:
           mkdir -p release_assets
           echo "=== Locating Built APKs ==="
           find app/build/outputs/ -type f -name "*.apk"
-          TAG_NAME="${GITHUB_REF_NAME:-v1.0.6}"
+          TAG_NAME="${GITHUB_REF_NAME:-v1.0.7}"
           cp app/build/outputs/apk/release/*.apk "release_assets/ArArNote-${TAG_NAME}-release.apk"
           cp app/build/outputs/apk/release/*.apk release_assets/ArArNote-release.apk
           ls -la release_assets/

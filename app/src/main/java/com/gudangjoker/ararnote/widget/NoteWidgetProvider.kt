@@ -29,7 +29,7 @@ class NoteWidgetProvider : AppWidgetProvider() {
 
         if (intent.action == ACTION_TOGGLE_CHECKLIST_ITEM) {
             val token = intent.getStringExtra(EXTRA_SECURITY_TOKEN)
-            if (token != SECURITY_TOKEN) {
+            if (token == null || token != getInstallationToken(context)) {
                 // Reject unauthorized external invocation
                 return
             }
@@ -142,7 +142,7 @@ class NoteWidgetProvider : AppWidgetProvider() {
                             val toggleIntent = Intent(context, NoteWidgetProvider::class.java).apply {
                                 action = ACTION_TOGGLE_CHECKLIST_ITEM
                                 setPackage(context.packageName)
-                                putExtra(EXTRA_SECURITY_TOKEN, SECURITY_TOKEN)
+                                putExtra(EXTRA_SECURITY_TOKEN, getInstallationToken(context))
                             }
                             val togglePendingIntent = PendingIntent.getBroadcast(
                                 context,
@@ -208,7 +208,17 @@ class NoteWidgetProvider : AppWidgetProvider() {
         const val EXTRA_NOTE_ID = "extra_note_id"
         const val EXTRA_ITEM_INDEX = "extra_item_index"
         const val EXTRA_SECURITY_TOKEN = "extra_security_token"
-        val SECURITY_TOKEN: String = java.util.UUID.randomUUID().toString()
+        private const val PREF_INSTALLATION_TOKEN = "widget_security_token_v1"
+
+        fun getInstallationToken(context: Context): String {
+            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            var token = prefs.getString(PREF_INSTALLATION_TOKEN, null)
+            if (token.isNullOrBlank()) {
+                token = java.util.UUID.randomUUID().toString()
+                prefs.edit().putString(PREF_INSTALLATION_TOKEN, token).apply()
+            }
+            return token
+        }
 
         fun notifyWidgets(context: Context) {
             val appWidgetManager = AppWidgetManager.getInstance(context)

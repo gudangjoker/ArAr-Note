@@ -9,7 +9,9 @@ import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.gudangjoker.ararnote.ArArNoteApp
 import com.gudangjoker.ararnote.R
@@ -59,9 +61,11 @@ class ArchiveActivity : AppCompatActivity() {
         binding.recyclerArchive.adapter = adapter
 
         lifecycleScope.launch {
-            viewModel.archivedNotes.collectLatest { notes ->
-                adapter.submitList(notes)
-                binding.textEmptyArchive.visibility = if (notes.isEmpty()) View.VISIBLE else View.GONE
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.archivedNotes.collectLatest { notes ->
+                    adapter.submitList(notes)
+                    binding.textEmptyArchive.visibility = if (notes.isEmpty()) View.VISIBLE else View.GONE
+                }
             }
         }
     }

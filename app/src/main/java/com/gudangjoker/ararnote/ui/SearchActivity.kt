@@ -11,7 +11,9 @@ import android.widget.EditText
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.gudangjoker.ararnote.ArArNoteApp
 import com.gudangjoker.ararnote.R
@@ -85,9 +87,11 @@ class SearchActivity : AppCompatActivity() {
 
         searchJob = lifecycleScope.launch {
             kotlinx.coroutines.delay(250) // 250ms debounce
-            viewModel.searchNotes(trimmed).collectLatest { notes ->
-                adapter.submitList(notes)
-                binding.textEmptySearch.visibility = if (notes.isEmpty()) View.VISIBLE else View.GONE
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.searchNotes(trimmed).collectLatest { notes ->
+                    adapter.submitList(notes)
+                    binding.textEmptySearch.visibility = if (notes.isEmpty()) View.VISIBLE else View.GONE
+                }
             }
         }
     }

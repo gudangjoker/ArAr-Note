@@ -41,14 +41,14 @@ object CryptoManager {
             System.arraycopy(iv, 0, combined, salt.size, iv.size)
             System.arraycopy(cipherText, 0, combined, salt.size + iv.size, cipherText.size)
 
-            return Base64.encodeToString(combined, Base64.NO_WRAP)
+            return Base64Compat.encodeToString(combined)
         } finally {
             spec.clearPassword()
         }
     }
 
     fun decrypt(encodedCipherText: String, password: CharArray): String {
-        val combined = Base64.decode(encodedCipherText, Base64.NO_WRAP)
+        val combined = Base64Compat.decode(encodedCipherText)
         if (combined.size < SALT_LENGTH + IV_LENGTH) {
             throw IllegalArgumentException("Invalid encrypted payload size")
         }

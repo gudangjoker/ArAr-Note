@@ -8,9 +8,14 @@
 .externalNativeBuild
 .cxx
 /app/build
-/app/schemas
 *.hprof
 *.apk
 *.backup
 *.dat
 logo ArAr Note.jpg.zip
+
+# Keystore and credentials
+*.jks
+*.keystore
+keystore.properties
+

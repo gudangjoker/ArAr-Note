@@ -36,11 +36,15 @@ class ChecklistRemoteViewsFactory(
 
     private fun loadData() {
         if (noteId != -1L) {
-            val db = AppDatabase.getDatabase(context)
-            val note = runBlocking { db.noteDao().getNoteById(noteId) }
-            if (note != null && note.encrypted == 0) {
-                items = ChecklistItem.fromJson(note.note)
-            } else {
+            try {
+                val db = AppDatabase.getDatabase(context)
+                val note = runBlocking { db.noteDao().getNoteById(noteId) }
+                if (note != null && note.encrypted == 0) {
+                    items = ChecklistItem.fromJson(note.note)
+                } else {
+                    items = emptyList()
+                }
+            } catch (e: Exception) {
                 items = emptyList()
             }
         }
