@@ -13,6 +13,7 @@
 *.backup
 *.dat
 logo ArAr Note.jpg.zip
+ArAr_Note_Logo.png
 
 # Keystore and credentials
 *.jks
