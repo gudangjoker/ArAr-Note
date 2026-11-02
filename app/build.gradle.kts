@@ -22,11 +22,16 @@ val releaseKeyAlias = System.getenv("KEY_ALIAS")
 val releaseKeyPassword = System.getenv("KEY_PASSWORD")
     ?: keystoreProps.getProperty("keyPassword")
 
-val hasReleaseSigning = !releaseStoreFilePath.isNullOrBlank() &&
+val releaseStoreFile = releaseStoreFilePath?.let { path ->
+    val f = file(path)
+    if (f.exists()) f else rootProject.file(path)
+}
+
+val hasReleaseSigning = releaseStoreFile != null &&
+        releaseStoreFile.exists() &&
         !releaseStorePassword.isNullOrBlank() &&
         !releaseKeyAlias.isNullOrBlank() &&
-        !releaseKeyPassword.isNullOrBlank() &&
-        file(releaseStoreFilePath).exists()
+        !releaseKeyPassword.isNullOrBlank()
 
 android {
     namespace = "com.gudangjoker.ararnote"
@@ -49,7 +54,7 @@ android {
     signingConfigs {
         if (hasReleaseSigning) {
             create("release") {
-                storeFile = file(releaseStoreFilePath)
+                storeFile = releaseStoreFile
                 storePassword = releaseStorePassword
                 keyAlias = releaseKeyAlias
                 keyPassword = releaseKeyPassword
